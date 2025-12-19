@@ -1,0 +1,155 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Enterprise {
+  id        String    @id @default(cuid())
+  name      String
+  kybStatus String    @default("PENDING")
+  creatorId String?
+  creator   User?     @relation("EnterpriseCreator", fields: [creatorId], references: [id])
+  users     User[]
+  projects  Project[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model User {
+  id                 String        @id @default(cuid())
+  email              String        @unique
+  password           String
+  name               String?
+  isCreator          Boolean       @default(false)
+  role               String        @default("ISSUER_MEMBER")
+  enterpriseId       String?
+  enterprise         Enterprise?   @relation(fields: [enterpriseId], references: [id])
+  createdEnterprises Enterprise[]  @relation("EnterpriseCreator")
+  projectMemberships UserProject[]
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+}
+
+model Project {
+  id                           String             @id @default(cuid())
+  enterpriseId                 String
+  enterprise                   Enterprise         @relation(fields: [enterpriseId], references: [id])
+  name                         String
+  issuer                       String?
+  legal                        String?
+  ops                          String?
+  auditor                      String?
+  status                       String             @default("DRAFT")
+  assetType                    String
+  description                  String?
+  acceptInstitutionalInvestors Boolean            @default(false)
+  walletAddress                String?
+  network                      String?
+  assetLocation                String?
+  assetDescription             String?
+  assetValue                   Float?
+  tokenName                    String?
+  tokenSymbol                  String?
+  totalSupply                  Int?
+  tokenDecimals                Int?               @default(18)
+  initialPrice                 Float?
+  revenueMode                  String?
+  annualReturn                 Float?
+  payoutFrequency              String?
+  capitalProfile               String?
+  distributionPolicy           String?
+  distributionNotes            String?
+  lifecycleStage               String             @default("CreatingInProgress")
+  currentStep                  Int                @default(1)
+  createdBy                    String?
+  updatedBy                    String?
+  createdAt                    DateTime           @default(now())
+  updatedAt                    DateTime           @updatedAt
+  files                        ProjectFile[]
+  tokens                       ProjectToken[]
+  milestones                   ProjectMilestone[]
+  members                      UserProject[]
+  invitations                  InvitationRecord[]
+  analyticsEvents              AnalyticsEvent[]
+
+  @@index([enterpriseId])
+}
+
+model ProjectFile {
+  id         String   @id @default(cuid())
+  projectId  String
+  project    Project  @relation(fields: [projectId], references: [id])
+  url        String
+  type       String
+  uploader   String?
+  uploadTime DateTime @default(now())
+  fileName   String
+  size       Int
+  status     String   @default("Draft")
+  origin     String
+}
+
+model ProjectToken {
+  id              String  @id @default(cuid())
+  projectId       String
+  project         Project @relation(fields: [projectId], references: [id])
+  chain           String
+  symbol          String
+  decimal         Int
+  contractAddress String?
+  totalSupply     Int?
+  NAV             Int?
+
+  @@unique([projectId, symbol])
+}
+
+model UserProject {
+  id        String  @id @default(cuid())
+  userId    String
+  projectId String
+  role      String
+  user      User    @relation(fields: [userId], references: [id])
+  project   Project @relation(fields: [projectId], references: [id])
+
+  @@unique([userId, projectId, role])
+}
+
+model InvitationRecord {
+  id         String    @id @default(cuid())
+  projectId  String
+  project    Project   @relation(fields: [projectId], references: [id])
+  role       String
+  email      String
+  status     String    @default("PENDING")
+  acceptTime DateTime?
+  createdAt  DateTime  @default(now())
+}
+
+model ProjectMilestone {
+  id        String   @id @default(cuid())
+  projectId String
+  project   Project  @relation(fields: [projectId], references: [id])
+  milestone String
+  status    String   @default("Pending")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model AnalyticsEvent {
+  id        String   @id @default(cuid())
+  projectId String?
+  project   Project? @relation(fields: [projectId], references: [id])
+  userId    String?
+  step      Int?
+  eventType String
+  detail    String?
+  createdAt DateTime @default(now())
+}
