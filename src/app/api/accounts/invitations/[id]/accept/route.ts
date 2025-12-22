@@ -1,16 +1,17 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
 type Params = {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 };
 
-export async function POST(_req: Request, { params }: Params) {
+export async function POST(_req: NextRequest, { params }: Params) {
   try {
+    const { id } = await params;
     const user = await getCurrentUser();
     const invitation = await prisma.invitationRecord.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: { project: true },
     });
 

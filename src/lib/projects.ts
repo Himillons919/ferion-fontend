@@ -24,12 +24,23 @@ export async function ensureMilestones(projectId: string) {
     { milestone: "SecurityAudit", status: "Pending" },
     { milestone: "PublishToken", status: "Pending" },
   ];
-
-  await prisma.projectMilestone.createMany({
-    data: milestones.map((m) => ({
-      ...m,
-      projectId,
-    })),
-    skipDuplicates: true,
+  const existing = await prisma.projectMilestone.findMany({
+    where: { projectId },
+    select: { milestone: true },
   });
+  const existingSet = new Set(existing.map((item) => item.milestone));
+  const missing = milestones.filter((item) => !existingSet.has(item.milestone));
+  if (missing.length === 0) return;
+
+  await Promise.all(
+    missing.map((item) =>
+      prisma.projectMilestone.create({
+        data: {
+          projectId,
+          milestone: item.milestone,
+          status: item.status,
+        },
+      }),
+    ),
+  );
 }

@@ -68,10 +68,14 @@ export default function Home() {
   };
 
   const isLogin = mode === "login";
+  const cardMotionClass = isLogin ? "auth-flip-login" : "auth-flip-register";
+  const jellyClass = isLogin ? "auth-jelly-login" : "auth-jelly-register";
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-gradient-to-br from-orange-50 via-white to-orange-100 px-6">
-      <div className="w-full max-w-4xl rounded-3xl border border-white/50 bg-white/50 p-10 shadow-2xl shadow-orange-100/50 backdrop-blur-2xl">
+      <div
+        className={`w-full max-w-4xl rounded-3xl border border-white/50 bg-white/50 p-10 shadow-2xl shadow-orange-100/50 backdrop-blur-2xl ${jellyClass}`}
+      >
         <div className="grid gap-8 md:grid-cols-2">
           <div className="rounded-3xl bg-gradient-to-br from-orange-400 to-orange-200 p-6 text-white shadow-xl">
             <p className="text-sm font-semibold uppercase tracking-wide">
@@ -94,7 +98,10 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="rounded-3xl border border-white/60 bg-white/70 p-6 shadow-lg backdrop-blur-xl">
+          <div className="auth-perspective">
+            <div
+              className={`auth-card rounded-3xl border border-white/60 bg-white/70 p-6 shadow-lg backdrop-blur-xl ${cardMotionClass}`}
+            >
             <div className="flex gap-2 rounded-2xl bg-orange-50 p-1 text-sm font-semibold text-slate-700">
               <button
                 type="button"
@@ -196,6 +203,7 @@ export default function Home() {
                 {loading ? "请稍候..." : isLogin ? "登录" : "注册并进入控制台"}
               </button>
             </form>
+            </div>
           </div>
         </div>
       </div>

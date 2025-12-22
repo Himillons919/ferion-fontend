@@ -1,4 +1,4 @@
-import { Wallet, AlertCircle } from 'lucide-react';
+﻿import { Wallet, AlertCircle } from 'lucide-react';
 import { BlockchainInput } from '@/lib/validators';
 
 type ChainErrors = Partial<Record<keyof BlockchainInput, string | undefined>>;
@@ -18,13 +18,12 @@ export function StepBlockchainSettings({ values, errors, networks, onChange }: S
   const isValidWallet = /^0x[a-fA-F0-9]{40}$/.test(values.walletAddress);
   const showWalletError = values.walletAddress.length > 0 && !isValidWallet;
   const mainnets = networks.filter((n) => !n.label.toLowerCase().includes('testnet'));
-  const testnets = networks.filter((n) => n.label.toLowerCase().includes('testnet'));
 
   return (
     <div className="space-y-6">
       <div className="flex items-start gap-3 pb-4 border-b border-slate-200">
-        <div className="p-2 bg-blue-50 rounded-lg">
-          <Wallet className="w-6 h-6 text-blue-600" />
+        <div className="p-2 bg-orange-50 rounded-lg">
+          <Wallet className="w-6 h-6 text-orange-600" />
         </div>
         <div>
           <h2 className="text-slate-900">Blockchain Settings</h2>
@@ -45,10 +44,10 @@ export function StepBlockchainSettings({ values, errors, networks, onChange }: S
             value={values.walletAddress}
             onChange={(e) => onChange('walletAddress', e.target.value)}
             placeholder="0x..."
-            className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-all font-mono ${
+            className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-orange-500 outline-none transition-all font-mono ${
               showWalletError
                 ? 'border-red-300 focus:border-red-500'
-                : 'border-slate-300 focus:border-blue-500'
+                : 'border-slate-300 focus:border-orange-500'
             }`}
           />
           {errors?.walletAddress && (
@@ -81,23 +80,14 @@ export function StepBlockchainSettings({ values, errors, networks, onChange }: S
           <select
             value={values.network}
             onChange={(e) => onChange('network', e.target.value)}
-            className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+            className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition-all"
           >
             <option value="">Select network</option>
-            <optgroup label="Mainnet">
-              {mainnets.map((network) => (
-                <option key={network.value} value={network.value}>
-                  {network.label}
-                </option>
-              ))}
-            </optgroup>
-            <optgroup label="Testnet">
-              {testnets.map((network) => (
-                <option key={network.value} value={network.value}>
-                  {network.label}
-                </option>
-              ))}
-            </optgroup>
+            {mainnets.map((network) => (
+              <option key={network.value} value={network.value}>
+                {network.label}
+              </option>
+            ))}
           </select>
           {errors?.network && (
             <div className="mt-1 text-sm text-red-600">{errors.network}</div>
@@ -108,12 +98,12 @@ export function StepBlockchainSettings({ values, errors, networks, onChange }: S
         </div>
 
         {/* Info Banner */}
-        <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+        <div className="p-4 bg-orange-50 border border-orange-200 rounded-lg">
           <div className="flex items-start gap-3">
-            <AlertCircle className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+            <AlertCircle className="w-5 h-5 text-orange-600 flex-shrink-0 mt-0.5" />
             <div>
-              <div className="text-blue-900">Important Note</div>
-              <div className="text-blue-700 mt-1">
+              <div className="text-orange-900">Important Note</div>
+              <div className="text-orange-700 mt-1">
                 Once you proceed to the Developing phase and deploy smart contracts, 
                 the blockchain network cannot be changed. Choose carefully.
               </div>
@@ -124,3 +114,4 @@ export function StepBlockchainSettings({ values, errors, networks, onChange }: S
     </div>
   );
 }
+

@@ -1,4 +1,4 @@
-import { Check } from 'lucide-react';
+﻿import { Check } from 'lucide-react';
 
 interface ProgressBarProps {
   currentStep: number;
@@ -33,7 +33,7 @@ export function ProgressBar({ currentStep, totalSteps }: ProgressBarProps) {
                   step < currentStep
                     ? 'bg-emerald-500 text-white'
                     : step === currentStep
-                    ? 'bg-blue-600 text-white ring-4 ring-blue-100'
+                    ? 'bg-orange-600 text-white ring-4 ring-orange-100'
                     : 'bg-slate-200 text-slate-400'
                 }`}
               >
@@ -44,7 +44,7 @@ export function ProgressBar({ currentStep, totalSteps }: ProgressBarProps) {
                 )}
               </div>
               <div className="mt-2 text-center">
-                <div className={`text-xs ${step === currentStep ? 'text-blue-600' : 'text-slate-500'}`}>
+                <div className={`text-xs ${step === currentStep ? 'text-orange-600' : 'text-slate-500'}`}>
                   {stepNames[index]}
                 </div>
               </div>
@@ -64,3 +64,4 @@ export function ProgressBar({ currentStep, totalSteps }: ProgressBarProps) {
     </div>
   );
 }
+

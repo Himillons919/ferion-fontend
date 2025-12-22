@@ -1,15 +1,16 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import { getProjectForEnterprise } from "@/lib/projects";
 import { prisma } from "@/lib/prisma";
 import { revenueModelSchema } from "@/lib/validators";
 
 type Params = {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 };
 
-export async function PUT(req: Request, { params }: Params) {
+export async function PUT(req: NextRequest, { params }: Params) {
   try {
+    const { id } = await params;
     const json = await req.json();
     const parsed = revenueModelSchema.safeParse(json);
     if (!parsed.success) {
@@ -21,7 +22,7 @@ export async function PUT(req: Request, { params }: Params) {
 
     const user = await getCurrentUser();
     const project = await getProjectForEnterprise(
-      params.id,
+      id,
       user.enterpriseId,
     );
     if (!project) {

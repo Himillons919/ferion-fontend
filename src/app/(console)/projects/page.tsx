@@ -1,4 +1,4 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
@@ -26,7 +26,7 @@ export default async function ProjectsPage() {
   });
 
   return (
-    <main className="min-h-screen bg-slate-50">
+    <main className="min-h-full bg-transparent">
       <header className="border-b border-slate-200 bg-white">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
           <div className="flex items-center gap-3">
@@ -41,12 +41,12 @@ export default async function ProjectsPage() {
             <a href="/dashboard" className="hover:text-slate-900">
               Dashboard
             </a>
-            <a href="/projects" className="font-semibold text-blue-600">
+            <a href="/projects" className="font-semibold text-orange-600">
               My Projects
             </a>
             <a
               href="/create"
-              className="rounded-md bg-blue-600 px-3 py-2 font-semibold text-white hover:bg-blue-700"
+              className="rounded-md bg-orange-600 px-3 py-2 font-semibold text-white hover:bg-orange-700"
             >
               + New Project
             </a>
@@ -64,7 +64,7 @@ export default async function ProjectsPage() {
           </div>
           <Link
             href="/create"
-            className="rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white hover:bg-blue-700"
+            className="rounded-md bg-orange-600 px-3 py-2 text-sm font-semibold text-white hover:bg-orange-700"
           >
             + New Project
           </Link>
@@ -106,19 +106,19 @@ export default async function ProjectsPage() {
                     <p className="font-semibold">{progress}%</p>
                     <div className="mt-2 h-2 w-full rounded-full bg-slate-200">
                       <div
-                        className="h-full rounded-full bg-blue-600"
+                        className="h-full rounded-full bg-orange-600"
                         style={{ width: `${progress}%` }}
                       />
                     </div>
                   </div>
                 </div>
 
-                <div className="mt-4 flex items-center justify-between text-sm text-blue-600">
+                <div className="mt-4 flex items-center justify-between text-sm text-orange-600">
                   <Link
                     href={`/projects/${project.id}`}
-                    className="font-semibold hover:text-blue-700"
+                    className="font-semibold hover:text-orange-700"
                   >
-                    View details →
+                    View details ??
                   </Link>
                   <span className="text-slate-500 text-xs">
                     Created {project.createdAt.toISOString().slice(0, 10)}
@@ -130,7 +130,7 @@ export default async function ProjectsPage() {
 
           {projects.length === 0 && (
             <div className="rounded-xl border border-dashed border-slate-300 bg-white p-6 text-center text-slate-600">
-              暂无项目，点击右上角「+ New Project」开始创建。
+              ??憿寧嚗?餃銝??? New Project??憪?撱箝?
             </div>
           )}
         </div>
@@ -138,3 +138,4 @@ export default async function ProjectsPage() {
     </main>
   );
 }
+

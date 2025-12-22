@@ -1,17 +1,18 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import { ensureMilestones, getProjectForEnterprise } from "@/lib/projects";
 import { prisma } from "@/lib/prisma";
 
 type Params = {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 };
 
-export async function POST(_req: Request, { params }: Params) {
+export async function POST(_req: NextRequest, { params }: Params) {
   try {
+    const { id } = await params;
     const user = await getCurrentUser();
     const project = await getProjectForEnterprise(
-      params.id,
+      id,
       user.enterpriseId,
     );
     if (!project) {

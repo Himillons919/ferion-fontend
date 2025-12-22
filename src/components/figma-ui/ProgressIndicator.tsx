@@ -1,4 +1,4 @@
-import { Check } from 'lucide-react';
+﻿import { Check } from 'lucide-react';
 
 interface ProgressIndicatorProps {
   currentStep: number;
@@ -30,7 +30,7 @@ export function ProgressIndicator({ currentStep, totalSteps }: ProgressIndicator
         
         {/* Progress bar fill */}
         <div
-          className="absolute top-5 left-0 h-0.5 bg-blue-600 transition-all duration-500"
+          className="absolute top-5 left-0 h-0.5 bg-orange-600 transition-all duration-500"
           style={{ width: `${((currentStep - 1) / (totalSteps - 1)) * 100}%` }}
         />
 
@@ -45,8 +45,8 @@ export function ProgressIndicator({ currentStep, totalSteps }: ProgressIndicator
                 <div
                   className={`
                     w-10 h-10 rounded-full border-2 flex items-center justify-center transition-all
-                    ${isCompleted ? 'bg-blue-600 border-blue-600' : ''}
-                    ${isCurrent ? 'bg-white border-blue-600' : ''}
+                    ${isCompleted ? 'bg-orange-600 border-orange-600' : ''}
+                    ${isCurrent ? 'bg-white border-orange-600' : ''}
                     ${!isCompleted && !isCurrent ? 'bg-white border-slate-300' : ''}
                   `}
                 >
@@ -55,7 +55,7 @@ export function ProgressIndicator({ currentStep, totalSteps }: ProgressIndicator
                   ) : (
                     <span
                       className={`text-sm ${
-                        isCurrent ? 'text-blue-600' : 'text-slate-400'
+                        isCurrent ? 'text-orange-600' : 'text-slate-400'
                       }`}
                     >
                       {step}
@@ -78,3 +78,4 @@ export function ProgressIndicator({ currentStep, totalSteps }: ProgressIndicator
     </div>
   );
 }
+

@@ -1,4 +1,4 @@
-import { StepReviewCreate } from './StepReviewCreate';
+﻿import { StepReviewCreate } from './StepReviewCreate';
 import { ProjectData } from './ProjectCreationWizard';
 import { Project } from '@/types/project';
 
@@ -10,7 +10,9 @@ interface StepProps {
 export function Step6ReviewCreate({ data, onCreate }: StepProps) {
   const project: Project = {
     id: data.projectId ?? 'DRAFT',
+    enterpriseId: 'DRAFT',
     name: data.projectName,
+    status: 'DRAFT',
     assetType: data.assetType,
     description: data.description,
     acceptInstitutionalInvestors: data.acceptInstitutional,
@@ -39,7 +41,7 @@ export function Step6ReviewCreate({ data, onCreate }: StepProps) {
       <div className="flex justify-end">
         <button
           onClick={onCreate}
-          className="inline-flex items-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-700"
+          className="inline-flex items-center rounded-lg bg-orange-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-orange-700"
         >
           Create Project
         </button>
@@ -47,3 +49,4 @@ export function Step6ReviewCreate({ data, onCreate }: StepProps) {
     </div>
   );
 }
+

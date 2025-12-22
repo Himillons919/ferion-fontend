@@ -1,4 +1,4 @@
-import { ChevronLeft, ChevronRight, Check } from 'lucide-react';
+﻿import { ChevronLeft, ChevronRight, Check } from 'lucide-react';
 
 interface NavigationButtonsProps {
   currentStep: number;
@@ -38,7 +38,7 @@ export function NavigationButtons({
           disabled={!canProceed}
           className={`flex items-center gap-2 px-6 py-3 rounded-lg transition-all ${
             canProceed
-              ? 'bg-blue-600 text-white hover:bg-blue-700'
+              ? 'bg-orange-600 text-white hover:bg-orange-700'
               : 'bg-slate-200 text-slate-400 cursor-not-allowed'
           }`}
         >
@@ -62,3 +62,4 @@ export function NavigationButtons({
     </div>
   );
 }
+

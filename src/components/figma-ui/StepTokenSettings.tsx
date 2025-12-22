@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react';
+﻿import { useEffect, useMemo } from 'react';
 import { Coins, AlertTriangle } from 'lucide-react';
 import { TokenSettingsInput } from '@/lib/validators';
 
@@ -52,8 +52,8 @@ export function StepTokenSettings({ values, errors, assetValue, onChange }: Step
   return (
     <div className="space-y-6">
       <div className="flex items-start gap-3 pb-4 border-b border-slate-200">
-        <div className="p-2 bg-blue-50 rounded-lg">
-          <Coins className="w-6 h-6 text-blue-600" />
+        <div className="p-2 bg-orange-50 rounded-lg">
+          <Coins className="w-6 h-6 text-orange-600" />
         </div>
         <div>
           <h2 className="text-slate-900">Token Settings</h2>
@@ -66,7 +66,7 @@ export function StepTokenSettings({ values, errors, assetValue, onChange }: Step
       <div className="space-y-6">
         {!assetValue && (
           <div className="p-3 rounded-lg border border-amber-200 bg-amber-50 text-amber-800">
-            请先在 “Asset Details” 步骤填写 Asset Value，系统才能自动计算发行总量。
+            霂瑕????sset Details??甇仿炊憛怠? Asset Value嚗頂蝏??質?刻恣蝞?銵駁???
           </div>
         )}
 
@@ -80,7 +80,7 @@ export function StepTokenSettings({ values, errors, assetValue, onChange }: Step
             value={values.tokenName}
             onChange={(e) => onChange('tokenName', e.target.value)}
             placeholder="e.g., Real Estate Token"
-            className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all ${
+            className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition-all ${
               errors?.tokenName ? 'border-red-300' : 'border-slate-300'
             }`}
           />
@@ -100,10 +100,10 @@ export function StepTokenSettings({ values, errors, assetValue, onChange }: Step
             onChange={(e) => onChange('tokenSymbol', e.target.value.toUpperCase())}
             placeholder="RET"
             maxLength={8}
-            className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-all uppercase ${
+            className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-orange-500 outline-none transition-all uppercase ${
               showSymbolError
                 ? 'border-red-300 focus:border-red-500'
-                : 'border-slate-300 focus:border-blue-500'
+                : 'border-slate-300 focus:border-orange-500'
             }`}
           />
           {showSymbolError && (
@@ -140,7 +140,7 @@ export function StepTokenSettings({ values, errors, assetValue, onChange }: Step
             placeholder="1.00"
             min="0.01"
             step="0.01"
-            className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all ${
+            className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition-all ${
               errors?.initialPrice ? 'border-red-300' : 'border-slate-300'
             }`}
           />
@@ -148,31 +148,31 @@ export function StepTokenSettings({ values, errors, assetValue, onChange }: Step
             <div className="mt-1 text-sm text-red-600">{errors.initialPrice}</div>
           )}
           <div className="mt-2 text-slate-500">
-            Total Supply 自动计算（Asset Value ÷ Initial Token Price），Decimals 固定为 18，结果可在下方预览中查看。
+            Total Supply ?芸霈∠?嚗sset Value 繩 Initial Token Price嚗?Decimals ?箏?銝?18嚗???其??寥?閫葉?亦???
           </div>
         </div>
 
         {/* Token Value Preview */}
         {tokenValue && (
           <div className={`p-4 rounded-lg border ${
-            showHighValueWarning ? 'bg-amber-50 border-amber-200' : 'bg-blue-50 border-blue-200'
+            showHighValueWarning ? 'bg-amber-50 border-amber-200' : 'bg-orange-50 border-orange-200'
           }`}>
             <div className="flex items-start gap-3">
               {showHighValueWarning && (
                 <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
               )}
               <div className="flex-1">
-                <div className={showHighValueWarning ? 'text-amber-900' : 'text-blue-900'}>
+                <div className={showHighValueWarning ? 'text-amber-900' : 'text-orange-900'}>
                   Token Value Preview
                 </div>
-                <div className={`mt-1 ${showHighValueWarning ? 'text-amber-700' : 'text-blue-700'}`}>
+                <div className={`mt-1 ${showHighValueWarning ? 'text-amber-700' : 'text-orange-700'}`}>
                   Based on your asset value of USD {assetValue ? Number(assetValue).toLocaleString() : 0}
                   {' '}and total supply of {computedSupply ? Number(computedSupply).toLocaleString() : 0},
                   each token represents approximately USD {Number(tokenValue).toLocaleString()} of the underlying asset.
                 </div>
                 {showHighValueWarning && (
                   <div className="text-amber-700 mt-2">
-                    ⚠️ Warning: Single token value exceeds $1M. Consider increasing total supply.
+                    ?? Warning: Single token value exceeds $1M. Consider increasing total supply.
                   </div>
                 )}
               </div>
@@ -183,3 +183,4 @@ export function StepTokenSettings({ values, errors, assetValue, onChange }: Step
     </div>
   );
 }
+

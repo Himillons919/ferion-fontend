@@ -1,11 +1,11 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { getCurrentUser } from "@/lib/auth";
 import { getProjectForEnterprise } from "@/lib/projects";
 import { prisma } from "@/lib/prisma";
 
 type Params = {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 };
 
 const memberSchema = z.object({
@@ -13,11 +13,12 @@ const memberSchema = z.object({
   role: z.string().min(1, "Role is required"),
 });
 
-export async function GET(_req: Request, { params }: Params) {
+export async function GET(_req: NextRequest, { params }: Params) {
   try {
+    const { id } = await params;
     const user = await getCurrentUser();
     const project = await getProjectForEnterprise(
-      params.id,
+      id,
       user.enterpriseId,
     );
 
@@ -49,8 +50,9 @@ export async function GET(_req: Request, { params }: Params) {
   }
 }
 
-export async function POST(req: Request, { params }: Params) {
+export async function POST(req: NextRequest, { params }: Params) {
   try {
+    const { id } = await params;
     const json = await req.json();
     const parsed = memberSchema.safeParse(json);
     if (!parsed.success) {
@@ -62,7 +64,7 @@ export async function POST(req: Request, { params }: Params) {
 
     const user = await getCurrentUser();
     const project = await getProjectForEnterprise(
-      params.id,
+      id,
       user.enterpriseId,
     );
 

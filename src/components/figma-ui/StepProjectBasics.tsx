@@ -1,4 +1,4 @@
-import { Building2 } from 'lucide-react';
+﻿import { Building2 } from 'lucide-react';
 import { ProjectBasicsInput } from '@/lib/validators';
 
 type BasicsErrors = Partial<Record<keyof ProjectBasicsInput, string | undefined>>;
@@ -22,8 +22,8 @@ export function StepProjectBasics({ values, errors, assetTypes, onChange }: Step
   return (
     <div className="space-y-6">
       <div className="flex items-start gap-3 pb-4 border-b border-slate-200">
-        <div className="p-2 bg-blue-50 rounded-lg">
-          <Building2 className="w-6 h-6 text-blue-600" />
+        <div className="p-2 bg-orange-50 rounded-lg">
+          <Building2 className="w-6 h-6 text-orange-600" />
         </div>
         <div>
           <h2 className="text-slate-900">Project Basics</h2>
@@ -45,7 +45,7 @@ export function StepProjectBasics({ values, errors, assetTypes, onChange }: Step
             onChange={(e) => onChange('projectName', e.target.value)}
             placeholder="Enter project name (1-100 characters)"
             maxLength={100}
-            className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all ${
+            className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition-all ${
               errors?.projectName ? 'border-red-300' : 'border-slate-300'
             }`}
           />
@@ -65,7 +65,7 @@ export function StepProjectBasics({ values, errors, assetTypes, onChange }: Step
           <select
             value={assetType}
             onChange={(e) => onChange('assetType', e.target.value)}
-            className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all bg-white ${
+            className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition-all bg-white ${
               errors?.assetType ? 'border-red-300' : 'border-slate-300'
             }`}
           >
@@ -91,7 +91,7 @@ export function StepProjectBasics({ values, errors, assetTypes, onChange }: Step
             onChange={(e) => onChange('projectDescription', e.target.value)}
             placeholder="Brief project description..."
             rows={4}
-            className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all resize-none ${
+            className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition-all resize-none ${
               errors?.projectDescription ? 'border-red-300' : 'border-slate-300'
             }`}
           />
@@ -107,7 +107,7 @@ export function StepProjectBasics({ values, errors, assetTypes, onChange }: Step
             id="institutional"
             checked={acceptInstitutionalInvestors}
             onChange={(e) => onChange('acceptInstitutionalInvestors', e.target.checked)}
-            className="mt-1 w-4 h-4 text-blue-600 border-slate-300 rounded focus:ring-2 focus:ring-blue-500"
+            className="mt-1 w-4 h-4 text-orange-600 border-slate-300 rounded focus:ring-2 focus:ring-orange-500"
           />
           <label htmlFor="institutional" className="flex-1 cursor-pointer">
             <div className="text-slate-900">Accept Institutional Investors</div>
@@ -120,3 +120,4 @@ export function StepProjectBasics({ values, errors, assetTypes, onChange }: Step
     </div>
   );
 }
+

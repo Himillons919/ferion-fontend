@@ -1,4 +1,4 @@
-import { ProjectData } from './ProjectCreationWizard';
+﻿import { ProjectData } from './ProjectCreationWizard';
 import { AlertCircle, CheckCircle2 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 
@@ -85,7 +85,7 @@ export function Step2BlockchainSettings({ data, onUpdate }: Step2Props) {
                 ? 'border-red-300 focus:ring-red-500'
                 : walletValidation?.isValid === true
                 ? 'border-green-300 focus:ring-green-500'
-                : 'border-slate-300 focus:ring-blue-500'
+                : 'border-slate-300 focus:ring-orange-500'
             }`}
           />
           
@@ -116,7 +116,7 @@ export function Step2BlockchainSettings({ data, onUpdate }: Step2Props) {
             id="blockchainNetwork"
             value={data.blockchainNetwork}
             onChange={(e) => onUpdate({ blockchainNetwork: e.target.value })}
-            className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+            className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent bg-white"
           >
             <option value="">Select network...</option>
             {BLOCKCHAIN_NETWORKS.slice(1).map((group) => (
@@ -161,3 +161,4 @@ export function Step2BlockchainSettings({ data, onUpdate }: Step2Props) {
     </div>
   );
 }
+

@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { promises as fs } from "fs";
 import path from "path";
 import { getCurrentUser } from "@/lib/auth";
@@ -8,7 +8,7 @@ import { prisma } from "@/lib/prisma";
 export const runtime = "nodejs";
 
 type Params = {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 };
 
 const MAX_SIZE = 10 * 1024 * 1024; // 10MB
@@ -18,11 +18,12 @@ const ALLOWED_TYPES = [
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
 ];
 
-export async function GET(_req: Request, { params }: Params) {
+export async function GET(_req: NextRequest, { params }: Params) {
   try {
+    const { id } = await params;
     const user = await getCurrentUser();
     const project = await getProjectForEnterprise(
-      params.id,
+      id,
       user.enterpriseId,
     );
     if (!project) {
@@ -41,11 +42,12 @@ export async function GET(_req: Request, { params }: Params) {
   }
 }
 
-export async function POST(req: Request, { params }: Params) {
+export async function POST(req: NextRequest, { params }: Params) {
   try {
+    const { id } = await params;
     const user = await getCurrentUser();
     const project = await getProjectForEnterprise(
-      params.id,
+      id,
       user.enterpriseId,
     );
     if (!project) {

@@ -12,10 +12,7 @@ export function Step4TokenSettings({ data, onUpdate }: StepProps) {
     tokenName: data.tokenName,
     tokenSymbol: data.tokenSymbol,
     totalSupply: data.totalSupply ? Number(data.totalSupply) : 0,
-    tokenDecimals:
-      typeof data.decimals === 'number'
-        ? data.decimals
-        : Number(data.decimals) || 18,
+    tokenDecimals: 18,
     initialPrice: data.initialTokenPrice ? Number(data.initialTokenPrice) : 0,
   };
 

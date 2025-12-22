@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { getCurrentUser } from "@/lib/auth";
 import { getProjectForEnterprise } from "@/lib/projects";
@@ -14,14 +14,15 @@ const tokenSchema = z.object({
 });
 
 type Params = {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 };
 
-export async function GET(_req: Request, { params }: Params) {
+export async function GET(_req: NextRequest, { params }: Params) {
   try {
+    const { id } = await params;
     const user = await getCurrentUser();
     const project = await getProjectForEnterprise(
-      params.id,
+      id,
       user.enterpriseId,
     );
 
@@ -43,8 +44,9 @@ export async function GET(_req: Request, { params }: Params) {
   }
 }
 
-export async function PUT(req: Request, { params }: Params) {
+export async function PUT(req: NextRequest, { params }: Params) {
   try {
+    const { id } = await params;
     const json = await req.json();
     const parsed = tokenSchema.safeParse(json);
 
@@ -57,7 +59,7 @@ export async function PUT(req: Request, { params }: Params) {
 
     const user = await getCurrentUser();
     const project = await getProjectForEnterprise(
-      params.id,
+      id,
       user.enterpriseId,
     );
 

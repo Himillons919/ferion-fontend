@@ -27,7 +27,7 @@ export function WizardLayout({
 }: WizardLayoutProps) {
   return (
     <div
-      className={`min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-100 ${className}`}
+      className={`min-h-full bg-transparent ${className}`}
     >
       {/* Header */}
       <header className="sticky top-0 z-10 border-b border-white/50 bg-white/60 backdrop-blur-xl">
@@ -106,7 +106,7 @@ export function WizardLayout({
 
       {/* Main Content */}
       <main className="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
-        {children}
+        <div className={contentClassName}>{children}</div>
       </main>
     </div>
   );

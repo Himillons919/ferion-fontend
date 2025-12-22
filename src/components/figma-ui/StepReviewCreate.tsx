@@ -1,4 +1,4 @@
-import { AlertCircle, CheckCircle2, ChevronDown, ChevronUp } from 'lucide-react';
+﻿import { AlertCircle, CheckCircle2, ChevronDown, ChevronUp } from 'lucide-react';
 import { useState } from 'react';
 import { Doc, Project } from '@/types/project';
 
@@ -126,7 +126,7 @@ export function StepReviewCreate({ project, documents = [] }: StepProps) {
               className="w-full flex items-center justify-between p-4 bg-slate-50 hover:bg-slate-100 transition-colors"
             >
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center">
+                <div className="w-8 h-8 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center">
                   {section.id}
                 </div>
                 <span className="text-slate-900">{section.title}</span>
@@ -184,23 +184,23 @@ export function StepReviewCreate({ project, documents = [] }: StepProps) {
       </div>
 
       {/* What Happens Next */}
-      <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-        <div className="text-blue-900 mb-2">What happens next?</div>
-        <ul className="space-y-2 text-blue-700">
+      <div className="p-4 bg-orange-50 border border-orange-200 rounded-lg">
+        <div className="text-orange-900 mb-2">What happens next?</div>
+        <ul className="space-y-2 text-orange-700">
           <li className="flex items-start gap-2">
-            <span className="text-blue-600 mt-1">•</span>
+            <span className="text-orange-600 mt-1">&bull;</span>
             <span>Your project will be saved as a Draft</span>
           </li>
           <li className="flex items-start gap-2">
-            <span className="text-blue-600 mt-1">•</span>
+            <span className="text-orange-600 mt-1">&bull;</span>
             <span>You&apos;ll be redirected to the Project Overview page</span>
           </li>
           <li className="flex items-start gap-2">
-            <span className="text-blue-600 mt-1">•</span>
+            <span className="text-orange-600 mt-1">&bull;</span>
             <span>You can proceed to the Developing phase for smart contract development</span>
           </li>
           <li className="flex items-start gap-2">
-            <span className="text-blue-600 mt-1">•</span>
+            <span className="text-orange-600 mt-1">&bull;</span>
             <span>Document review, KYC configuration, and compliance steps will be available</span>
           </li>
         </ul>
@@ -208,3 +208,4 @@ export function StepReviewCreate({ project, documents = [] }: StepProps) {
     </div>
   );
 }
+

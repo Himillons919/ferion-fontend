@@ -1,4 +1,4 @@
-import { ChangeEvent } from 'react';
+﻿import { ChangeEvent } from 'react';
 import { FileText, Upload } from 'lucide-react';
 import { AssetDetailsInput } from '@/lib/validators';
 import { Doc } from '@/types/project';
@@ -24,8 +24,8 @@ export function StepAssetDetails({ values, errors, documents, onChange, onUpload
   return (
     <div className="space-y-6">
       <div className="flex items-start gap-3 pb-4 border-b border-slate-200">
-        <div className="p-2 bg-blue-50 rounded-lg">
-          <FileText className="w-6 h-6 text-blue-600" />
+        <div className="p-2 bg-orange-50 rounded-lg">
+          <FileText className="w-6 h-6 text-orange-600" />
         </div>
         <div>
           <h2 className="text-slate-900">Asset Details</h2>
@@ -46,7 +46,7 @@ export function StepAssetDetails({ values, errors, documents, onChange, onUpload
             value={values.assetLocation}
             onChange={(e) => onChange('assetLocation', e.target.value)}
             placeholder="e.g., Delaware, USA or Singapore"
-            className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all ${
+            className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition-all ${
               errors?.assetLocation ? 'border-red-300' : 'border-slate-300'
             }`}
           />
@@ -68,7 +68,7 @@ export function StepAssetDetails({ values, errors, documents, onChange, onUpload
             onChange={(e) => onChange('assetDescription', e.target.value)}
             placeholder="Provide detailed characteristics, features, and relevant information about the asset..."
             rows={5}
-            className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all resize-none ${
+            className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition-all resize-none ${
               errors?.assetDescription ? 'border-red-300' : 'border-slate-300'
             }`}
           />
@@ -87,12 +87,15 @@ export function StepAssetDetails({ values, errors, documents, onChange, onUpload
               type="number"
               value={values.assetValue ?? ''}
               onChange={(e) =>
-                onChange('assetValue', e.target.value === '' ? undefined : Number(e.target.value))
+                onChange(
+                  'assetValue',
+                  (e.target.value === '' ? undefined : Number(e.target.value)) as any
+                )
               }
               placeholder="1000000"
               min="0.01"
               step="0.01"
-              className={`flex-1 px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all ${
+              className={`flex-1 px-4 py-3 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition-all ${
                 errors?.assetValue ? 'border-red-300' : 'border-slate-300'
               }`}
             />
@@ -110,7 +113,7 @@ export function StepAssetDetails({ values, errors, documents, onChange, onUpload
           <label className="block text-slate-700 mb-2">
             Related Documents <span className="text-slate-400">(Optional)</span>
           </label>
-          <div className="border-2 border-dashed border-slate-300 rounded-lg p-6 hover:border-blue-400 transition-colors">
+          <div className="border-2 border-dashed border-slate-300 rounded-lg p-6 hover:border-orange-400 transition-colors">
             <input
               type="file"
               id="file-upload"
@@ -160,3 +163,4 @@ export function StepAssetDetails({ values, errors, documents, onChange, onUpload
     </div>
   );
 }
+

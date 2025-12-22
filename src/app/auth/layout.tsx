@@ -8,7 +8,7 @@ export const metadata = {
 export default function AuthLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en">
-      <body className="bg-gradient-to-br from-slate-50 via-white to-indigo-50">
+      <body className="bg-gradient-to-br from-orange-50 via-white to-orange-100">
         {children}
       </body>
     </html>

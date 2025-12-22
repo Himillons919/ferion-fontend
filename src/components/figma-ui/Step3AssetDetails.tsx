@@ -11,7 +11,7 @@ export function Step3AssetDetails({ data, onUpdate }: StepProps) {
   const values: AssetDetailsInput = {
     assetLocation: data.assetLocation,
     assetDescription: data.assetDescription,
-    assetValue: data.assetValue ? Number(data.assetValue) : undefined,
+    assetValue: data.assetValue ? Number(data.assetValue) : 0,
   };
 
   const handleChange = <K extends keyof AssetDetailsInput>(

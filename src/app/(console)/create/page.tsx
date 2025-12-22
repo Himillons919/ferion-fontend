@@ -89,23 +89,67 @@ const wizardSteps = [
 ];
 
 const revenueModeOptions = [
-  { value: revenueModes[0], label: revenueModes[0], description: "稳定的固定收益结构" },
-  { value: revenueModes[1], label: revenueModes[1], description: "收益随项目表现波动" },
-  { value: revenueModes[2], label: revenueModes[2], description: "兼具固定与绩效收益" },
-  { value: revenueModes[3], label: revenueModes[3], description: "自定义收益模型" },
+  {
+    value: revenueModes[0],
+    label: revenueModes[0],
+    description: "Stable fixed return profile.",
+  },
+  {
+    value: revenueModes[1],
+    label: revenueModes[1],
+    description: "Returns vary with project performance.",
+  },
+  {
+    value: revenueModes[2],
+    label: revenueModes[2],
+    description: "Blend of fixed and performance-based returns.",
+  },
+  {
+    value: revenueModes[3],
+    label: revenueModes[3],
+    description: "Custom return structure.",
+  },
 ];
 
 const capitalProfileOptions = [
-  { value: capitalProfiles[0], label: capitalProfiles[0], description: "到期一次性支付" },
-  { value: capitalProfiles[1], label: capitalProfiles[1], description: "分期偿还本金" },
-  { value: capitalProfiles[2], label: capitalProfiles[2], description: "无固定到期日的持续结构" },
-  { value: capitalProfiles[3], label: capitalProfiles[3], description: "开放式流动结构" },
+  {
+    value: capitalProfiles[0],
+    label: capitalProfiles[0],
+    description: "Single bullet payment at maturity.",
+  },
+  {
+    value: capitalProfiles[1],
+    label: capitalProfiles[1],
+    description: "Amortizing payments over time.",
+  },
+  {
+    value: capitalProfiles[2],
+    label: capitalProfiles[2],
+    description: "No fixed maturity date.",
+  },
+  {
+    value: capitalProfiles[3],
+    label: capitalProfiles[3],
+    description: "Open-ended liquidity profile.",
+  },
 ];
 
 const distributionPolicyOptions = [
-  { value: distributionPolicies[0], label: distributionPolicies[0], description: "收益现金分派" },
-  { value: distributionPolicies[1], label: distributionPolicies[1], description: "自动再投资" },
-  { value: distributionPolicies[2], label: distributionPolicies[2], description: "现金与再投资混合" },
+  {
+    value: distributionPolicies[0],
+    label: distributionPolicies[0],
+    description: "Distribute cash flow regularly.",
+  },
+  {
+    value: distributionPolicies[1],
+    label: distributionPolicies[1],
+    description: "Reinvest distributions into the asset.",
+  },
+  {
+    value: distributionPolicies[2],
+    label: distributionPolicies[2],
+    description: "Mix of distribution and reinvestment.",
+  },
 ];
 
 const payoutFrequencyOptions = payoutFrequencies.map((freq) => ({
@@ -141,8 +185,8 @@ export default function CreateWizardPage() {
   const [documents, setDocuments] = useState<Doc[]>([]);
   const [finalizing, setFinalizing] = useState(false);
 
-  const basicsForm = useForm<ProjectBasicsInput, any, ProjectBasicsInput>({
-    resolver: zodResolver(projectBasicsSchema),
+  const basicsForm = useForm<ProjectBasicsInput>({
+    resolver: zodResolver(projectBasicsSchema) as any,
     defaultValues: {
       projectName: "",
       assetType: "",
@@ -151,16 +195,16 @@ export default function CreateWizardPage() {
     },
   });
 
-  const chainForm = useForm<BlockchainInput, any, BlockchainInput>({
-    resolver: zodResolver(blockchainSchema),
+  const chainForm = useForm<BlockchainInput>({
+    resolver: zodResolver(blockchainSchema) as any,
     defaultValues: {
       walletAddress: "",
       network: "",
     },
   });
 
-  const assetForm = useForm<AssetDetailsInput, any, AssetDetailsInput>({
-    resolver: zodResolver(assetDetailsSchema),
+  const assetForm = useForm<AssetDetailsInput>({
+    resolver: zodResolver(assetDetailsSchema) as any,
     defaultValues: {
       assetLocation: "",
       assetDescription: "",
@@ -168,8 +212,8 @@ export default function CreateWizardPage() {
     },
   });
 
-  const tokenForm = useForm<TokenSettingsInput, any, TokenSettingsInput>({
-    resolver: zodResolver(tokenSettingsSchema),
+  const tokenForm = useForm<TokenSettingsInput>({
+    resolver: zodResolver(tokenSettingsSchema) as any,
     defaultValues: {
       tokenName: "",
       tokenSymbol: "",
@@ -179,8 +223,8 @@ export default function CreateWizardPage() {
     },
   });
 
-  const revenueForm = useForm<RevenueModelInput, any, RevenueModelInput>({
-    resolver: zodResolver(revenueModelSchema),
+  const revenueForm = useForm<RevenueModelInput>({
+    resolver: zodResolver(revenueModelSchema) as any,
     defaultValues: {
       revenueMode: "",
       capitalProfile: "",
@@ -212,7 +256,7 @@ export default function CreateWizardPage() {
       tokenName: project.tokenName ?? "",
       tokenSymbol: project.tokenSymbol ?? "",
       totalSupply: project.totalSupply ?? undefined,
-      tokenDecimals: project.tokenDecimals ?? 18,
+      tokenDecimals: 18,
       initialPrice: project.initialPrice ?? undefined,
     });
     revenueForm.reset({
@@ -243,7 +287,7 @@ export default function CreateWizardPage() {
     return () => window.removeEventListener("wizardBack", handleBack);
   }, []);
 
-  const handleStep1 = async (values: ProjectBasicsInput) => {
+    const handleStep1 = async (values: ProjectBasicsInput) => {
     setError(null);
     setSuccess(null);
     const res = await fetch("/api/projects/step1", {
@@ -252,19 +296,19 @@ export default function CreateWizardPage() {
       body: JSON.stringify({ ...values, projectId }),
     });
     if (!res.ok) {
-      setError("保存项目信息失败，请检查输入。");
+      setError("Failed to save project basics. Please review the form.");
       return;
     }
     const data = await res.json();
     setProject(data.project);
     setProjectId(data.project.id);
     setCurrentStep(2);
-    setSuccess("已保存项目基础信息。");
+    setSuccess("Project basics saved.");
   };
 
   const handleStep2 = async (values: BlockchainInput) => {
     if (!projectId) {
-      setError("请先完成第 1 步创建项目。");
+      setError("Please complete step 1 before continuing.");
       return;
     }
     setError(null);
@@ -275,18 +319,18 @@ export default function CreateWizardPage() {
       body: JSON.stringify(values),
     });
     if (!res.ok) {
-      setError("保存链上设置失败，请检查输入。");
+      setError("Failed to save blockchain settings. Please try again.");
       return;
     }
     const data = await res.json();
     setProject(data.project);
     setCurrentStep(3);
-    setSuccess("已保存链上设置。");
+    setSuccess("Blockchain settings saved.");
   };
 
   const handleStep3 = async (values: AssetDetailsInput) => {
     if (!projectId) {
-      setError("请先完成第 1 步创建项目。");
+      setError("Please complete step 1 before continuing.");
       return;
     }
     setError(null);
@@ -297,35 +341,35 @@ export default function CreateWizardPage() {
       body: JSON.stringify(values),
     });
     if (!res.ok) {
-      setError("保存资产信息失败，请检查输入。");
+      setError("Failed to save asset details. Please try again.");
       return;
     }
     const data = await res.json();
     setProject(data.project);
     setCurrentStep(4);
-    setSuccess("已保存资产信息。");
+    setSuccess("Asset details saved.");
   };
 
   const handleStep4 = async (values: TokenSettingsInput) => {
     if (!projectId) {
-      setError("请先完成第 1 步创建项目。");
+      setError("Please complete step 1 before continuing.");
       return;
     }
     const assetValueForTokens =
       project?.assetValue ?? assetForm.getValues("assetValue");
     if (!assetValueForTokens) {
-      setError("请先在资产信息中填写 Asset Value，用于计算发行总量。");
+      setError("Please provide Asset Value in Asset Details.");
       return;
     }
     if (!values.initialPrice) {
-      setError("请先填写 Initial Token Price。");
+      setError("Please provide Initial Token Price.");
       return;
     }
     const computedSupply = Math.floor(
       Number(assetValueForTokens) / Number(values.initialPrice),
     );
     if (!Number.isFinite(computedSupply) || computedSupply <= 0) {
-      setError("资产估值与初始单价的组合无效，无法计算总发行量。");
+      setError("Asset Value and Initial Price result in an invalid total supply.");
       return;
     }
 
@@ -341,18 +385,18 @@ export default function CreateWizardPage() {
       }),
     });
     if (!res.ok) {
-      setError("保存 Token 信息失败，请检查输入。");
+      setError("Failed to save token settings. Please try again.");
       return;
     }
     const data = await res.json();
     setProject(data.project);
     setCurrentStep(5);
-    setSuccess("已保存 Token 参数。");
+    setSuccess("Token settings saved.");
   };
 
   const handleStep5 = async (values: RevenueModelInput) => {
     if (!projectId) {
-      setError("请先完成第 1 步创建项目。");
+      setError("Please complete step 1 before continuing.");
       return;
     }
     setError(null);
@@ -363,13 +407,13 @@ export default function CreateWizardPage() {
       body: JSON.stringify(values),
     });
     if (!res.ok) {
-      setError("保存收益模型失败，请检查输入。");
+      setError("Failed to save revenue model. Please try again.");
       return;
     }
     const data = await res.json();
     setProject(data.project);
     setCurrentStep(6);
-    setSuccess("已保存收益模型。");
+    setSuccess("Revenue model saved.");
   };
 
   const uploadDocuments = async (files: FileList | null) => {
@@ -383,7 +427,7 @@ export default function CreateWizardPage() {
         body: formData,
       });
       if (!res.ok) {
-        setError(`上传文件 ${file.name} 失败，请确认格式与大小。`);
+        setError(`Failed to upload document ${file.name}. Please verify file type and size.`);
         return;
       }
     }
@@ -391,13 +435,13 @@ export default function CreateWizardPage() {
     if (refreshed.ok) {
       const data = await refreshed.json();
       setDocuments(data.documents ?? []);
-      setSuccess("已上传文件。");
+      setSuccess("Documents uploaded.");
     }
   };
 
   const handleFinalize = async () => {
     if (!projectId) {
-      setError("请先完成各步骤信息。");
+      setError("Please complete all required steps.");
       return;
     }
     try {
@@ -410,17 +454,21 @@ export default function CreateWizardPage() {
       const data = await res.json();
       setFinalizing(false);
       if (!res.ok) {
-        const missing = data?.missing?.join("，");
-        setError(missing ? `缺失必填信息：${missing}` : "创建草案失败。");
+        const missing = data?.missing?.join(", ");
+        setError(
+          missing
+            ? `Missing required fields: ${missing}`
+            : "Project creation failed.",
+        );
         return;
       }
       setProject(data.project);
-      setSuccess("项目草案已创建，正在跳转到控制台...");
+      setSuccess("Project created. Redirecting to dashboard...");
       router.push("/dashboard");
     } catch (err) {
       console.error(err);
       setFinalizing(false);
-      setError("创建草案失败，请稍后再试。");
+      setError("Project creation failed. Please try again.");
     }
   };
 
@@ -464,35 +512,50 @@ export default function CreateWizardPage() {
     key: K,
     value: ProjectBasicsInput[K]
   ) => {
-    basicsForm.setValue(key, value, { shouldValidate: true, shouldDirty: true });
+    basicsForm.setValue(key as any, value as any, {
+      shouldValidate: true,
+      shouldDirty: true,
+    });
   };
 
   const updateChain = <K extends keyof BlockchainInput>(
     key: K,
     value: BlockchainInput[K]
   ) => {
-    chainForm.setValue(key, value, { shouldValidate: true, shouldDirty: true });
+    chainForm.setValue(key as any, value as any, {
+      shouldValidate: true,
+      shouldDirty: true,
+    });
   };
 
   const updateAsset = <K extends keyof AssetDetailsInput>(
     key: K,
     value: AssetDetailsInput[K]
   ) => {
-    assetForm.setValue(key, value, { shouldValidate: true, shouldDirty: true });
+    assetForm.setValue(key as any, value as any, {
+      shouldValidate: true,
+      shouldDirty: true,
+    });
   };
 
   const updateToken = <K extends keyof TokenSettingsInput>(
     key: K,
     value: TokenSettingsInput[K] | undefined
   ) => {
-    tokenForm.setValue(key, value as TokenSettingsInput[K], { shouldValidate: true, shouldDirty: true });
+    tokenForm.setValue(key as any, value as any, {
+      shouldValidate: true,
+      shouldDirty: true,
+    });
   };
 
   const updateRevenue = <K extends keyof RevenueModelInput>(
     key: K,
     value: RevenueModelInput[K] | undefined
   ) => {
-    revenueForm.setValue(key, value as RevenueModelInput[K], { shouldValidate: true, shouldDirty: true });
+    revenueForm.setValue(key as any, value as any, {
+      shouldValidate: true,
+      shouldDirty: true,
+    });
   };
 
   const submitStep1 = () => {
@@ -548,8 +611,6 @@ export default function CreateWizardPage() {
       steps={wizardSteps}
       onNext={() => {}}
       onBack={() => setCurrentStep((prev) => Math.max(1, prev - 1))}
-      className="bg-gradient-to-br from-orange-50 via-white to-orange-100"
-      contentClassName="rounded-3xl border border-white/60 bg-white/70 p-6 shadow-xl backdrop-blur-xl"
     >
       <div className="space-y-6">
         <ErrorBox message={error} />
@@ -638,14 +699,14 @@ export default function CreateWizardPage() {
         {currentStep === 6 && (
           <StepContainer
             title="Review & Create"
-            description="复核所有设置，准备创建草案"
+            description="憭??挽蝵殷????遣??"
             onValidate={submitFinalize}
             isLastStep
           >
             <StepReviewCreate project={project} documents={documents} />
             {finalizing && (
-              <div className="mt-4 rounded-lg bg-blue-50 px-4 py-3 text-sm text-blue-800">
-                正在创建草案，请稍候...
+              <div className="mt-4 rounded-lg bg-orange-50 px-4 py-3 text-sm text-orange-800">
+                甇??遣??嚗窈蝔?..
               </div>
             )}
           </StepContainer>
@@ -654,3 +715,4 @@ export default function CreateWizardPage() {
     </WizardLayout>
   );
 }
+

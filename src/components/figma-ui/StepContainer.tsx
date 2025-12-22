@@ -1,4 +1,4 @@
-import { ReactNode } from 'react';
+﻿import { ReactNode } from 'react';
 import { ChevronLeft, ChevronRight, Save } from 'lucide-react';
 
 interface StepContainerProps {
@@ -60,7 +60,7 @@ export function StepContainer({ title, description, children, onValidate, isLast
             </button>
             <button
               onClick={handleNext}
-              className="flex items-center gap-2 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              className="flex items-center gap-2 px-6 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors"
             >
               {isLastStep ? 'Create Project' : 'Next'}
               {!isLastStep && <ChevronRight className="w-4 h-4" />}
@@ -71,3 +71,4 @@ export function StepContainer({ title, description, children, onValidate, isLast
     </div>
   );
 }
+

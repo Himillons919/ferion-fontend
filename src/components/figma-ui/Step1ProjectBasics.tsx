@@ -1,4 +1,4 @@
-import { ProjectData } from './ProjectCreationWizard';
+﻿import { ProjectData } from './ProjectCreationWizard';
 
 interface Step1Props {
   data: ProjectData;
@@ -40,7 +40,7 @@ export function Step1ProjectBasics({ data, onUpdate }: Step1Props) {
             onChange={(e) => onUpdate({ projectName: e.target.value })}
             placeholder="Enter project name (1-100 characters)"
             maxLength={100}
-            className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
           />
           <p className="text-xs text-slate-500 mt-1.5">
             {data.projectName.length}/100 characters
@@ -56,7 +56,7 @@ export function Step1ProjectBasics({ data, onUpdate }: Step1Props) {
             id="assetType"
             value={data.assetType}
             onChange={(e) => onUpdate({ assetType: e.target.value })}
-            className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+            className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent bg-white"
           >
             {ASSET_TYPES.map((type) => (
               <option key={type.value} value={type.value}>
@@ -77,7 +77,7 @@ export function Step1ProjectBasics({ data, onUpdate }: Step1Props) {
             onChange={(e) => onUpdate({ description: e.target.value })}
             placeholder="Provide a brief overview of your project..."
             rows={4}
-            className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+            className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent resize-none"
           />
         </div>
 
@@ -88,7 +88,7 @@ export function Step1ProjectBasics({ data, onUpdate }: Step1Props) {
             id="acceptInstitutional"
             checked={data.acceptInstitutional}
             onChange={(e) => onUpdate({ acceptInstitutional: e.target.checked })}
-            className="mt-0.5 w-4 h-4 text-blue-600 border-slate-300 rounded focus:ring-2 focus:ring-blue-500"
+            className="mt-0.5 w-4 h-4 text-orange-600 border-slate-300 rounded focus:ring-2 focus:ring-orange-500"
           />
           <div className="flex-1">
             <label htmlFor="acceptInstitutional" className="block text-sm text-slate-900 cursor-pointer">
@@ -102,11 +102,12 @@ export function Step1ProjectBasics({ data, onUpdate }: Step1Props) {
       </div>
 
       {/* Info Box */}
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-        <p className="text-sm text-blue-900">
+      <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
+        <p className="text-sm text-orange-900">
           <strong>Note:</strong> Once you click Next, a project ID will be generated and your draft will be saved automatically.
         </p>
       </div>
     </div>
   );
 }
+
