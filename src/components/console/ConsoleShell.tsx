@@ -1,6 +1,12 @@
 ﻿"use client";
 
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import type { LucideIcon } from "lucide-react";
 import {
@@ -26,6 +32,11 @@ import {
   Trash2,
 } from "lucide-react";
 import type { Project } from "@/types/project";
+import {
+  PROJECT_ROLE_CODES,
+  PROJECT_ROLE_LABELS,
+  type ProjectRoleCode,
+} from "@/lib/projectRoles";
 
 type SectionKey =
   | "overview"
@@ -58,6 +69,26 @@ type SecondaryItem = {
 type SecondaryGroup = {
   title: string;
   items: SecondaryItem[];
+};
+
+type InvitationRecord = {
+  id: string;
+  email: string;
+  role: string;
+  status: string;
+  acceptTime?: string | null;
+  createdAt?: string;
+};
+
+type MemberRecord = {
+  id: string;
+  role: string;
+  user?: {
+    id: string;
+    email: string | null;
+    name?: string | null;
+    isCreator?: boolean;
+  } | null;
 };
 
 const overviewItems: SecondaryItem[] = [
@@ -264,6 +295,7 @@ type ConsoleButtonProps = {
   variant?: ButtonVariant;
   onClick?: () => void;
   className?: string;
+  disabled?: boolean;
 };
 
 function ConsoleButton({
@@ -272,6 +304,7 @@ function ConsoleButton({
   variant = "primary",
   onClick,
   className = "",
+  disabled = false,
 }: ConsoleButtonProps) {
   const variantClass =
     variant === "primary"
@@ -283,7 +316,8 @@ function ConsoleButton({
     <button
       type="button"
       onClick={onClick}
-      className={`console-btn ${variantClass} ${className}`}
+      disabled={disabled}
+      className={`console-btn ${variantClass} ${className} disabled:cursor-not-allowed disabled:opacity-60`}
     >
       {Icon ? <Icon className="h-4 w-4" /> : null}
       {label}
@@ -809,7 +843,127 @@ function OverviewDigitalAssetsSection() {
   );
 }
 
-function ProjectHomeSection({ projectInfo }: { projectInfo: typeof defaultProjectInfo }) {
+function ProjectHomeSection({
+  projectInfo,
+  projectId,
+}: {
+  projectInfo: typeof defaultProjectInfo;
+  projectId?: string | null;
+}) {
+  const [inviteEmail, setInviteEmail] = useState("");
+  const [inviteRole, setInviteRole] = useState<ProjectRoleCode>("LEGAL");
+  const [isInviting, setIsInviting] = useState(false);
+  const [inviteError, setInviteError] = useState<string | null>(null);
+  const [inviteSuccess, setInviteSuccess] = useState<string | null>(null);
+  const [invitations, setInvitations] = useState<InvitationRecord[]>([]);
+  const [members, setMembers] = useState<MemberRecord[]>([]);
+  const [isLoadingCollab, setIsLoadingCollab] = useState(false);
+
+  const roleGuidance: {
+    code: ProjectRoleCode;
+    stage: string;
+    description: string;
+  }[] = [
+    {
+      code: "LEGAL",
+      stage: "Draft / Reviewing",
+      description: "梳理合规与条款，避免进入开发后才返工。",
+    },
+    {
+      code: "ADMIN_OPS",
+      stage: "Developing 前",
+      description: "运营配置、钱包/资金流方案、发行节奏的落地。",
+    },
+    {
+      code: "AUDITOR",
+      stage: "Developing 后期 / Testing",
+      description: "合约与参数安全审计，修复后再进入 Ready/Live。",
+    },
+  ];
+
+  const formatRole = (role: string) =>
+    PROJECT_ROLE_LABELS[role as ProjectRoleCode] ?? role;
+
+  const fetchCollaborationData = useCallback(async () => {
+    if (!projectId) return;
+    setIsLoadingCollab(true);
+    setInviteError(null);
+    try {
+      const [inviteRes, memberRes] = await Promise.all([
+        fetch(`/api/accounts/invitations?projectId=${projectId}`),
+        fetch(`/api/accounts/projects/${projectId}/members`),
+      ]);
+
+      if (inviteRes.ok) {
+        const data = await inviteRes.json();
+        setInvitations(data.invitations || []);
+      } else {
+        setInviteError("无法获取邀请列表");
+      }
+
+      if (memberRes.ok) {
+        const data = await memberRes.json();
+        setMembers(data.members || []);
+      } else {
+        setInviteError((prev) => prev ?? "无法获取成员列表");
+      }
+    } catch (error) {
+      console.error("Collaboration fetch error", error);
+      setInviteError("获取协作者信息失败");
+    } finally {
+      setIsLoadingCollab(false);
+    }
+  }, [projectId]);
+
+  useEffect(() => {
+    fetchCollaborationData();
+  }, [fetchCollaborationData]);
+
+  const handleInvite = async () => {
+    if (!projectId) {
+      setInviteError("请选择具体项目后再邀请协作者");
+      return;
+    }
+    if (!inviteEmail.trim()) {
+      setInviteError("请填写对方的邮箱");
+      return;
+    }
+
+    setIsInviting(true);
+    setInviteError(null);
+    setInviteSuccess(null);
+
+    try {
+      const response = await fetch("/api/accounts/invitations", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          projectId,
+          email: inviteEmail.trim(),
+          role: inviteRole,
+        }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => null);
+        setInviteError(data?.error || "发送邀请失败");
+        return;
+      }
+
+      const data = await response.json();
+      setInvitations((prev) => [data.invitation, ...prev]);
+      setInviteSuccess("邀请已发送");
+      setInviteEmail("");
+    } catch (error) {
+      console.error("Invite error", error);
+      setInviteError("发送邀请失败，请重试");
+    } finally {
+      setIsInviting(false);
+    }
+  };
+
   return (
     <section className="space-y-6">
       <Stagger index={0}>
@@ -885,6 +1039,198 @@ function ProjectHomeSection({ projectInfo }: { projectInfo: typeof defaultProjec
       </Stagger>
 
       <Stagger index={1}>
+        <Panel className="p-6 space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-semibold text-[color:var(--console-text)]">
+                Collaboration & roles
+              </p>
+              <p className="text-xs text-[color:var(--console-muted)]">
+                固定四种角色，按阶段邀请进入项目协作。
+              </p>
+            </div>
+            <span className="console-pill">Project roles</span>
+          </div>
+
+          <div className="grid gap-4 lg:grid-cols-[1.3fr_1fr]">
+            <div className="space-y-3">
+              <div className="rounded-2xl border border-white/70 bg-white/70 p-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-sm font-semibold text-[color:var(--console-text)]">
+                      {formatRole("CREATOR")}
+                    </p>
+                    <p className="text-xs text-[color:var(--console-muted)]">
+                      创建项目的人自动成为 Creator/Issuer，默认拥有最高权限。
+                    </p>
+                  </div>
+                  <span className="console-pill">已加入</span>
+                </div>
+              </div>
+              <div className="grid gap-3 md:grid-cols-2">
+                {roleGuidance.map((item) => (
+                  <div
+                    key={item.code}
+                    className="rounded-2xl border border-white/70 bg-white/70 p-4"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="space-y-1">
+                        <p className="text-sm font-semibold text-[color:var(--console-text)]">
+                          {formatRole(item.code)}
+                        </p>
+                        <p className="text-xs text-[color:var(--console-muted)]">
+                          {item.description}
+                        </p>
+                      </div>
+                      <span className="console-pill">{item.stage}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="console-card console-card-strong space-y-3 p-4">
+              <div className="flex items-center justify-between">
+                <p className="text-sm font-semibold text-[color:var(--console-text)]">
+                  邀请协作者
+                </p>
+                <span className="console-pill">Creator / Legal / Admin & Ops / Auditor</span>
+              </div>
+              {projectId ? (
+                <>
+                  <label className="flex flex-col gap-2">
+                    <span className="text-xs font-semibold text-[color:var(--console-muted)]">
+                      角色
+                    </span>
+                    <select
+                      className="console-input"
+                      value={inviteRole}
+                      onChange={(event) =>
+                        setInviteRole(event.target.value as ProjectRoleCode)
+                      }
+                    >
+                      {PROJECT_ROLE_CODES.map((role) => (
+                        <option key={role} value={role}>
+                          {formatRole(role)}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+
+                  <label className="flex flex-col gap-2">
+                    <span className="text-xs font-semibold text-[color:var(--console-muted)]">
+                      邮箱
+                    </span>
+                    <input
+                      className="console-input"
+                      placeholder="email@example.com"
+                      value={inviteEmail}
+                      onChange={(event) => setInviteEmail(event.target.value)}
+                    />
+                  </label>
+
+                  <div className="flex items-center gap-2">
+                    <ConsoleButton
+                      label={isInviting ? "发送中..." : "发送邀请"}
+                      onClick={handleInvite}
+                      icon={Plus}
+                      disabled={isInviting}
+                    />
+                    <ConsoleButton
+                      label="刷新"
+                      variant="ghost"
+                      onClick={fetchCollaborationData}
+                      disabled={isInviting || isLoadingCollab}
+                    />
+                  </div>
+
+                  {inviteError ? (
+                    <p className="text-xs text-red-600">{inviteError}</p>
+                  ) : null}
+                  {inviteSuccess ? (
+                    <p className="text-xs text-emerald-600">{inviteSuccess}</p>
+                  ) : null}
+
+                  <div className="space-y-2 border-t border-white/60 pt-3">
+                    <p className="text-xs font-semibold text-[color:var(--console-text)]">
+                      待接受的邀请
+                    </p>
+                    <div className="space-y-2 text-sm text-[color:var(--console-text)]">
+                      {isLoadingCollab ? (
+                        <p className="text-xs text-[color:var(--console-muted)]">
+                          加载中...
+                        </p>
+                      ) : invitations.filter((item) => item.status === "PENDING").length === 0 ? (
+                        <p className="text-xs text-[color:var(--console-muted)]">
+                          暂无待接受的邀请
+                        </p>
+                      ) : (
+                        invitations
+                          .filter((item) => item.status === "PENDING")
+                          .map((invite) => (
+                            <div
+                              key={invite.id}
+                              className="flex items-center justify-between rounded-xl border border-white/60 bg-white/70 px-3 py-2"
+                            >
+                              <div>
+                                <p className="text-sm font-semibold text-[color:var(--console-text)]">
+                                  {invite.email}
+                                </p>
+                                <p className="text-xs text-[color:var(--console-muted)]">
+                                  {formatRole(invite.role)}
+                                </p>
+                              </div>
+                              <span className="console-pill">Pending</span>
+                            </div>
+                          ))
+                      )}
+                    </div>
+
+                    <p className="text-xs font-semibold text-[color:var(--console-text)]">
+                      已加入的成员
+                    </p>
+                    <div className="space-y-2 text-sm text-[color:var(--console-text)]">
+                      {isLoadingCollab ? (
+                        <p className="text-xs text-[color:var(--console-muted)]">
+                          加载中...
+                        </p>
+                      ) : members.length === 0 ? (
+                        <p className="text-xs text-[color:var(--console-muted)]">
+                          暂无成员
+                        </p>
+                      ) : (
+                        members.map((member) => (
+                          <div
+                            key={member.id}
+                            className="flex items-center justify-between rounded-xl border border-white/60 bg-white/70 px-3 py-2"
+                          >
+                            <div>
+                              <p className="text-sm font-semibold text-[color:var(--console-text)]">
+                                {member.user?.name || member.user?.email || "Member"}
+                              </p>
+                              <p className="text-xs text-[color:var(--console-muted)]">
+                                {formatRole(member.role)}
+                                {member.user?.isCreator ? " • Creator" : ""}
+                              </p>
+                            </div>
+                            <span className="console-pill">Active</span>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <p className="text-xs text-[color:var(--console-muted)]">
+                  请选择具体项目后，邀请对应角色的协作者。
+                </p>
+              )}
+            </div>
+          </div>
+        </Panel>
+      </Stagger>
+
+      <Stagger index={2}>
         <Panel className="p-6">
           <div className="flex items-center justify-between">
             <div>
@@ -1519,7 +1865,11 @@ function InvestmentPortalSection({
 }
 
 function EditPortalSection({ projectId }: { projectId?: string }) {
-  type PortalFormState = Record<string, string | boolean | File | null | undefined>;
+  type PortalFormState = Record<
+    string,
+    string | boolean | File | null | undefined
+  >;
+  const MAX_MEDIA_ITEMS = 5;
 
   const tabs = [
     { id: "media", label: "Media" },
@@ -1558,6 +1908,34 @@ function EditPortalSection({ projectId }: { projectId?: string }) {
     color_infoBox: "#f1f3f7",
     color_secondary: "#90949c",
   });
+  const [galleryImages, setGalleryImages] = useState<(File | null)[]>([null]);
+  const [partnerLogos, setPartnerLogos] = useState<(File | null)[]>([null]);
+
+  const addGallerySlot = () => {
+    if (galleryImages.length >= MAX_MEDIA_ITEMS) return;
+    setGalleryImages((prev) => [...prev, null]);
+  };
+
+  const addPartnerLogoSlot = () => {
+    if (partnerLogos.length >= MAX_MEDIA_ITEMS) return;
+    setPartnerLogos((prev) => [...prev, null]);
+  };
+
+  const updateGalleryFile = (index: number, file: File) => {
+    setGalleryImages((prev) => {
+      const next = [...prev];
+      next[index] = file;
+      return next;
+    });
+  };
+
+  const updatePartnerLogoFile = (index: number, file: File) => {
+    setPartnerLogos((prev) => {
+      const next = [...prev];
+      next[index] = file;
+      return next;
+    });
+  };
 
   const updateField = (name: string, value: string | boolean | File | null) => {
     setFormState((prev) => ({ ...prev, [name]: value }));
@@ -1599,10 +1977,10 @@ function EditPortalSection({ projectId }: { projectId?: string }) {
       onClick={onToggle}
       className={`flex h-5 w-10 items-center rounded-full p-0.5 transition ${
         on
-          ? "bg-[var(--console-accent)]"
+          ? "bg-[var(--console-accent)] shadow-sm"
           : dangerWhenOff
-            ? "bg-rose-400"
-            : "bg-[color:var(--console-border)]"
+            ? "bg-rose-300"
+            : "bg-slate-300"
       }`}
       aria-pressed={on}
     >
@@ -1624,9 +2002,24 @@ function EditPortalSection({ projectId }: { projectId?: string }) {
     dangerWhenOff?: boolean;
   }) => {
     const isOn = Boolean(formState[name]);
+    const baseOff =
+      dangerWhenOff
+        ? "bg-rose-50 border-rose-200 text-rose-500"
+        : "bg-slate-100 border-slate-300 text-slate-400";
+    const baseOn =
+      "bg-white/90 border-white/80 shadow-sm text-[color:var(--console-text)]";
+
     return (
-      <div className="flex items-center justify-between rounded-2xl border border-white/60 bg-white/60 px-4 py-3">
-        <span className="text-sm font-medium text-[color:var(--console-text)]">
+      <div
+        className={`flex items-center justify-between rounded-2xl px-4 py-3 ${
+          isOn ? baseOn : `${baseOff} border-dashed`
+        }`}
+      >
+        <span
+          className={`text-sm font-medium ${
+            isOn ? "text-[color:var(--console-text)]" : "inherit"
+          }`}
+        >
           {label}
         </span>
         <SwitchControl
@@ -1641,6 +2034,8 @@ function EditPortalSection({ projectId }: { projectId?: string }) {
   const UploadField = ({
     label,
     name,
+    value,
+    onFileChange,
     placeholder = "Drag your png image or Browse",
     helper,
     secondaryLabel,
@@ -1648,6 +2043,8 @@ function EditPortalSection({ projectId }: { projectId?: string }) {
   }: {
     label: string;
     name: string;
+    value?: File | null;
+    onFileChange?: (file: File) => void;
     placeholder?: string;
     helper?: string;
     secondaryLabel?: string;
@@ -1656,7 +2053,7 @@ function EditPortalSection({ projectId }: { projectId?: string }) {
     const displayText = secondaryLabel
       ? `${secondaryLabel} · ${placeholder}`
       : placeholder;
-    const file = formState[name];
+    const file = value !== undefined ? value : formState[name];
     const inputRef = useRef<HTMLInputElement>(null);
     const fileLabel = file instanceof File ? file.name : displayText;
 
@@ -1685,7 +2082,11 @@ function EditPortalSection({ projectId }: { projectId?: string }) {
           onChange={(event) => {
             const selectedFile = event.target.files?.[0];
             if (selectedFile) {
-              updateField(name, selectedFile);
+              if (onFileChange) {
+                onFileChange(selectedFile);
+              } else {
+                updateField(name, selectedFile);
+              }
             }
           }}
         />
@@ -1726,10 +2127,20 @@ function EditPortalSection({ projectId }: { projectId?: string }) {
     );
   };
 
-  const AddMoreLink = ({ label }: { label: string }) => (
+  const AddMoreLink = ({
+    label,
+    onClick,
+    disabled,
+  }: {
+    label: string;
+    onClick?: () => void;
+    disabled?: boolean;
+  }) => (
     <button
       type="button"
-      className="inline-flex items-center gap-2 text-sm font-semibold text-[color:var(--console-accent)]"
+      onClick={onClick}
+      disabled={disabled}
+      className="inline-flex items-center gap-2 text-sm font-semibold text-[color:var(--console-accent)] disabled:cursor-not-allowed disabled:opacity-60"
     >
       <Plus className="h-4 w-4" />
       {label}
@@ -1760,6 +2171,16 @@ function EditPortalSection({ projectId }: { projectId?: string }) {
           payload.append(key, value);
         } else {
           payload.append(key, String(value));
+        }
+      });
+      galleryImages.forEach((file, index) => {
+        if (file instanceof File) {
+          payload.append(`galleryImages[${index}]`, file);
+        }
+      });
+      partnerLogos.forEach((file, index) => {
+        if (file instanceof File) {
+          payload.append(`partnerLogos[${index}]`, file);
         }
       });
 
@@ -1819,17 +2240,69 @@ function EditPortalSection({ projectId }: { projectId?: string }) {
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">
-        <div className="space-y-4">
-          <UploadField
-            label="Image gallery (max. 10)"
-            name="galleryImage1"
-            secondaryLabel="Image 1"
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <p className="text-sm font-semibold text-[color:var(--console-text)]">
+              Image gallery (max. 5)
+            </p>
+            <span className="text-xs text-[color:var(--console-muted)]">
+              {galleryImages.filter(Boolean).length}/{MAX_MEDIA_ITEMS}
+            </span>
+          </div>
+          <div className="space-y-3">
+            {galleryImages.map((file, index) => (
+              <UploadField
+                key={`gallery-${index}`}
+                label={index === 0 ? "Gallery images" : " "}
+                name={`galleryImage${index + 1}`}
+                secondaryLabel={`Image ${index + 1}`}
+                value={file}
+                onFileChange={(selected) => updateGalleryFile(index, selected)}
+              />
+            ))}
+          </div>
+          <AddMoreLink
+            label={
+              galleryImages.length >= MAX_MEDIA_ITEMS
+                ? "Reached max (5)"
+                : "Add one more"
+            }
+            onClick={addGallerySlot}
+            disabled={galleryImages.length >= MAX_MEDIA_ITEMS}
           />
-          <AddMoreLink label="Add one more" />
         </div>
-        <div className="space-y-4">
-          <UploadField label="Partner logotype 1" name="partnerLogo1" />
-          <AddMoreLink label="Add one more" />
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <p className="text-sm font-semibold text-[color:var(--console-text)]">
+              Partner logotypes (max. 5)
+            </p>
+            <span className="text-xs text-[color:var(--console-muted)]">
+              {partnerLogos.filter(Boolean).length}/{MAX_MEDIA_ITEMS}
+            </span>
+          </div>
+          <div className="space-y-3">
+            {partnerLogos.map((file, index) => (
+              <UploadField
+                key={`partner-${index}`}
+                label={index === 0 ? "Partner logotypes" : " "}
+                name={`partnerLogo${index + 1}`}
+                secondaryLabel={`Logo ${index + 1}`}
+                value={file}
+                onFileChange={(selected) =>
+                  updatePartnerLogoFile(index, selected)
+                }
+              />
+            ))}
+          </div>
+          <AddMoreLink
+            label={
+              partnerLogos.length >= MAX_MEDIA_ITEMS
+                ? "Reached max (5)"
+                : "Add one more"
+            }
+            onClick={addPartnerLogoSlot}
+            disabled={partnerLogos.length >= MAX_MEDIA_ITEMS}
+          />
         </div>
       </div>
     </Panel>
@@ -2664,13 +3137,11 @@ export default function ConsoleShell() {
         </>
       );
     }
+    // For edit-portal, the Preview / Publish actions are already rendered
+    // inside the main section toolbar (with proper form submit handlers),
+    // so we avoid duplicating them in the header.
     if (resolvedSection === "edit-portal") {
-      return (
-        <>
-          <ConsoleButton label="Preview" variant="ghost" />
-          <ConsoleButton label="Publish" icon={CheckCircle} />
-        </>
-      );
+      return null;
     }
     if (resolvedSection === "documents") {
       return <ConsoleButton label="Publish" icon={CheckCircle} />;
@@ -2683,7 +3154,12 @@ export default function ConsoleShell() {
       case "overview":
         return <OverviewSection />;
       case "home":
-        return <ProjectHomeSection projectInfo={projectInfo} />;
+        return (
+          <ProjectHomeSection
+            projectInfo={projectInfo}
+            projectId={projectId}
+          />
+        );
       case "digital-asset":
         return isOverviewMode ? (
           <OverviewDigitalAssetsSection />
