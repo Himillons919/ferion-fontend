@@ -5,7 +5,15 @@ export const PROJECT_ROLE_CODES = [
   "AUDITOR",
 ] as const;
 
+export const INVITABLE_PROJECT_ROLE_CODES = [
+  "LEGAL",
+  "ADMIN_OPS",
+  "AUDITOR",
+] as const;
+
 export type ProjectRoleCode = (typeof PROJECT_ROLE_CODES)[number];
+export type InvitableProjectRoleCode =
+  (typeof INVITABLE_PROJECT_ROLE_CODES)[number];
 
 export const PROJECT_ROLE_LABELS: Record<ProjectRoleCode, string> = {
   CREATOR: "Creator (Issuer)",

@@ -3,15 +3,15 @@ import { z } from "zod";
 import { getCurrentUser } from "@/lib/auth";
 import { getProjectForEnterprise } from "@/lib/projects";
 import { prisma } from "@/lib/prisma";
-import { PROJECT_ROLE_CODES } from "@/lib/projectRoles";
+import { INVITABLE_PROJECT_ROLE_CODES } from "@/lib/projectRoles";
 
 const inviteSchema = z.object({
   projectId: z.string().min(1, "Project id is required"),
   email: z.string().email("Email is invalid"),
-  role: z.enum(PROJECT_ROLE_CODES, {
+  role: z.enum(INVITABLE_PROJECT_ROLE_CODES, {
     errorMap: () => ({
       message:
-        "Role must be one of: CREATOR, LEGAL, ADMIN_OPS, AUDITOR.",
+        "Role must be one of: LEGAL, ADMIN_OPS, AUDITOR.",
     }),
   }),
 });

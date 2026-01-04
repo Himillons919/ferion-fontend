@@ -5,6 +5,7 @@ import {
   useEffect,
   useRef,
   useState,
+  type ButtonHTMLAttributes,
   type ReactNode,
 } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
@@ -14,12 +15,15 @@ import {
   Bell,
   Calendar,
   CheckCircle,
+  ChevronLeft,
+  ChevronRight,
   ChevronDown,
   FileText,
   Filter,
   Home,
   LayoutGrid,
   Layers,
+  LogOut,
   Monitor,
   Plus,
   Search,
@@ -33,8 +37,9 @@ import {
 } from "lucide-react";
 import type { Project } from "@/types/project";
 import {
-  PROJECT_ROLE_CODES,
+  INVITABLE_PROJECT_ROLE_CODES,
   PROJECT_ROLE_LABELS,
+  type InvitableProjectRoleCode,
   type ProjectRoleCode,
 } from "@/lib/projectRoles";
 
@@ -59,6 +64,29 @@ type PortalState =
   | "PROD_LIVE"
   | "DEPLOY_FAILED";
 
+type OverviewMetrics = {
+  totalCreated: number;
+  activeRemaining: number;
+  activeSubscribed: number;
+  closedRaised: number;
+  notYetOffered: number;
+};
+
+type NewAssetsPoint = {
+  date: string;
+  value: number;
+};
+
+type NewAssetsSeries = {
+  interval: "day" | "week" | "month";
+  startDate: string;
+  endDate: string;
+  points: NewAssetsPoint[];
+  total: number;
+  previousTotal: number;
+  changePct: number;
+};
+
 type SecondaryItem = {
   id: SectionKey;
   label: string;
@@ -73,6 +101,7 @@ type SecondaryGroup = {
 
 type ConsoleShellProps = {
   userName?: string;
+  userEmail?: string | null;
 };
 
 type InvitationRecord = {
@@ -211,6 +240,51 @@ const ASSET_TYPE_MAP: Record<string, string> = {
   'other': 'Other',
 };
 
+const USD_FORMATTER = new Intl.NumberFormat("en-US", {
+  style: "currency",
+  currency: "USD",
+  maximumFractionDigits: 2,
+});
+
+const PERCENT_FORMATTER = new Intl.NumberFormat("en-US", {
+  style: "percent",
+  maximumFractionDigits: 1,
+});
+
+function formatUsd(value?: number | null) {
+  const numeric = typeof value === "number" && Number.isFinite(value) ? value : 0;
+  const abs = Math.abs(numeric);
+  if (abs < 1000) {
+    return USD_FORMATTER.format(numeric);
+  }
+
+  let scaled = abs;
+  let suffix = "k";
+  if (abs >= 1_000_000_000) {
+    scaled = abs / 1_000_000_000;
+    suffix = "b";
+  } else if (abs >= 1_000_000) {
+    scaled = abs / 1_000_000;
+    suffix = "m";
+  } else {
+    scaled = abs / 1_000;
+  }
+
+  const decimals = scaled >= 100 ? 0 : scaled >= 10 ? 1 : 2;
+  const formatted = scaled
+    .toFixed(decimals)
+    .replace(/\.0+$/, "")
+    .replace(/(\.\d)0$/, "$1");
+  const sign = numeric < 0 ? "-" : "";
+  return `${sign}$${formatted}${suffix}`;
+}
+
+function formatPercent(value?: number | null) {
+  const numeric = typeof value === "number" && Number.isFinite(value) ? value : 0;
+  const formatted = PERCENT_FORMATTER.format(numeric);
+  return numeric > 0 ? `+${formatted}` : formatted;
+}
+
 function getAssetTypeLabel(assetType: string | null | undefined): string {
   if (!assetType) return 'Equity'; // Default fallback
   return ASSET_TYPE_MAP[assetType] || assetType;
@@ -329,17 +403,24 @@ function ConsoleButton({
   );
 }
 
+type ConsoleIconButtonProps = {
+  icon: LucideIcon;
+  label: string;
+  className?: string;
+} & Omit<ButtonHTMLAttributes<HTMLButtonElement>, "type" | "className">;
+
 function ConsoleIconButton({
   icon: Icon,
   label,
   className = "",
-}: {
-  icon: LucideIcon;
-  label: string;
-  className?: string;
-}) {
+  ...buttonProps
+}: ConsoleIconButtonProps) {
   return (
-    <button type="button" className={`console-icon-btn ${className}`}>
+    <button
+      type="button"
+      className={`console-icon-btn ${className}`}
+      {...buttonProps}
+    >
       <Icon className="h-4 w-4" aria-hidden="true" />
       <span className="sr-only">{label}</span>
     </button>
@@ -404,7 +485,7 @@ function StatTile({
     tone === "strong" ? "console-card console-card-strong" : "console-card";
   return (
     <div className={`${toneClass} p-4`}>
-      <p className="text-xs uppercase text-[color:var(--console-muted)]">
+      <p className="console-line-clamp-2 text-xs uppercase text-[color:var(--console-muted)]">
         {label}
       </p>
       <div className="mt-2 text-2xl font-semibold text-[color:var(--console-text)]">
@@ -508,6 +589,46 @@ function ChartPlaceholder() {
       <div className="mt-3 flex items-center gap-2 text-xs text-[color:var(--console-muted)]">
         <span className="text-rose-500">0%</span>
         <span>/ previous period</span>
+      </div>
+    </div>
+  );
+}
+
+function NewAssetsChart({ series }: { series: NewAssetsSeries | null }) {
+  if (!series || series.points.length === 0) {
+    return <ChartPlaceholder />;
+  }
+
+  const values = series.points.map((point) => point.value);
+  const maxValue = Math.max(...values, 1);
+  const changeTone =
+    series.changePct >= 0 ? "text-emerald-500" : "text-rose-500";
+
+  return (
+    <div className="mt-4 rounded-2xl border border-white/70 bg-white/70 p-4">
+      <div className="relative h-40 w-full">
+        <div className="absolute left-0 right-0 top-1/2 border-t border-dashed border-white/70" />
+        <div className="absolute inset-0 flex items-end gap-2">
+          {series.points.map((point) => (
+            <div key={point.date} className="flex-1">
+              <div
+                className="rounded-lg bg-[var(--console-accent)]/70"
+                style={{
+                  height: `${(point.value / maxValue) * 100}%`,
+                  minHeight: point.value > 0 ? "6%" : "0%",
+                }}
+              />
+            </div>
+          ))}
+        </div>
+      </div>
+      <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-xs text-[color:var(--console-muted)]">
+        <span>
+          {series.startDate} - {series.endDate}
+        </span>
+        <span className={changeTone}>
+          {formatPercent(series.changePct)} / previous period
+        </span>
       </div>
     </div>
   );
@@ -619,27 +740,51 @@ function EmptyState({
   );
 }
 
-function OverviewSection() {
+function OverviewSection({
+  metrics,
+  isLoading,
+  newAssets,
+}: {
+  metrics: OverviewMetrics | null;
+  isLoading: boolean;
+  newAssets: NewAssetsSeries | null;
+}) {
+  const placeholderValue = isLoading && !metrics ? "--" : null;
+  const safeMetrics: OverviewMetrics = metrics ?? {
+    totalCreated: 0,
+    activeRemaining: 0,
+    activeSubscribed: 0,
+    closedRaised: 0,
+    notYetOffered: 0,
+  };
+  const getValue = (value: number) => placeholderValue ?? formatUsd(value);
+
   const digitalAssetStats = [
     {
-      label: "Total digital asset value created (USD)",
-      value: "$0.00",
-      helper: "USD value of all projects set up.",
+      label: "Total project value created (USD)",
+      value: getValue(safeMetrics.totalCreated),
+      helper:
+        "Created = active remaining + active subscribed + closed raised + unallocated.",
     },
     {
-      label: "Value of tokens with live Store (USD)",
-      value: "$0.00",
-      helper: "USD value of assets with a public store listing.",
+      label: "Active offerings - remaining allocation (USD)",
+      value: getValue(safeMetrics.activeRemaining),
+      helper: "Available to subscribe: cap minus subscribed.",
     },
     {
-      label: "Value of tokens with live Offering (USD)",
-      value: "$0.00",
-      helper: "USD value of assets currently raising or for sale.",
+      label: "Active offerings - subscribed (USD)",
+      value: getValue(safeMetrics.activeSubscribed),
+      helper: "Subscribed amount in live offerings.",
     },
     {
-      label: "Value of tokens successfully funded/closed (USD)",
-      value: "$0.00",
-      helper: "USD value of offerings that closed successfully.",
+      label: "Closed offerings - raised (USD)",
+      value: getValue(safeMetrics.closedRaised),
+      helper: "Raised amount from closed successful offerings.",
+    },
+    {
+      label: "Not yet offered / unallocated (USD)",
+      value: getValue(safeMetrics.notYetOffered),
+      helper: "Created value not allocated to live or closed offerings.",
     },
   ];
   const offeringStats = [
@@ -656,8 +801,8 @@ function OverviewSection() {
   ];
   const investorStatsSecondary = [
     { label: "New investors (last 30 days)", value: "0" },
-    { label: "Average investment per investor", value: "0.0 $" },
-    { label: "Total investments (month-to-date)", value: "0.0 $" },
+    { label: "Average investment per investor", value: "$0.0" },
+    { label: "Total investments (month-to-date)", value: "$0.0" },
   ];
 
   return (
@@ -665,7 +810,7 @@ function OverviewSection() {
       <Stagger index={0}>
         <Panel className="p-6">
           <SectionHeader icon={LayoutGrid} title="Digital assets" />
-          <div className="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
             {digitalAssetStats.map((stat) => (
               <StatTile
                 key={stat.label}
@@ -683,7 +828,7 @@ function OverviewSection() {
                 </p>
                 <ChartFilters />
               </div>
-              <ChartPlaceholder />
+              <NewAssetsChart series={newAssets} />
             </PanelStrong>
             <BreakdownCard
               title="% TVL/Chains"
@@ -855,7 +1000,8 @@ function ProjectHomeSection({
   projectId?: string | null;
 }) {
   const [inviteEmail, setInviteEmail] = useState("");
-  const [inviteRole, setInviteRole] = useState<ProjectRoleCode>("LEGAL");
+  const [inviteRole, setInviteRole] =
+    useState<InvitableProjectRoleCode>("LEGAL");
   const [isInviting, setIsInviting] = useState(false);
   const [inviteError, setInviteError] = useState<string | null>(null);
   const [inviteSuccess, setInviteSuccess] = useState<string | null>(null);
@@ -1098,7 +1244,7 @@ function ProjectHomeSection({
                 <p className="text-sm font-semibold text-[color:var(--console-text)]">
                   邀请协作者
                 </p>
-                <span className="console-pill">Creator / Legal / Admin & Ops / Auditor</span>
+                <span className="console-pill">Legal / Admin & Ops / Auditor</span>
               </div>
               {projectId ? (
                 <>
@@ -1110,10 +1256,12 @@ function ProjectHomeSection({
                       className="console-input"
                       value={inviteRole}
                       onChange={(event) =>
-                        setInviteRole(event.target.value as ProjectRoleCode)
+                        setInviteRole(
+                          event.target.value as InvitableProjectRoleCode,
+                        )
                       }
                     >
-                      {PROJECT_ROLE_CODES.map((role) => (
+                      {INVITABLE_PROJECT_ROLE_CODES.map((role) => (
                         <option key={role} value={role}>
                           {formatRole(role)}
                         </option>
@@ -3176,7 +3324,59 @@ function DeleteProjectDialog({
   );
 }
 
-export default function ConsoleShell({ userName }: ConsoleShellProps) {
+function AccountSettingsDialog({
+  onClose,
+  userName,
+  userEmail,
+}: {
+  onClose: () => void;
+  userName?: string;
+  userEmail?: string | null;
+}) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
+      <div className="w-full max-w-md rounded-2xl border border-white/70 bg-white/90 p-6 shadow-xl backdrop-blur-xl">
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-semibold text-[color:var(--console-text)]">
+            Account settings
+          </h2>
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-lg p-1 text-[color:var(--console-muted)] hover:bg-white/80"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+
+        <div className="mt-4 space-y-4">
+          <div className="rounded-2xl border border-white/70 bg-white/70 p-4">
+            <p className="text-xs uppercase text-[color:var(--console-muted)]">
+              Signed in as
+            </p>
+            <p className="mt-1 text-sm font-semibold text-[color:var(--console-text)]">
+              {userName ?? "Account"}
+            </p>
+            {userEmail ? (
+              <p className="mt-1 text-xs text-[color:var(--console-muted)]">
+                {userEmail}
+              </p>
+            ) : null}
+          </div>
+          <div className="rounded-2xl border border-dashed border-white/70 bg-white/60 p-4 text-xs text-[color:var(--console-muted)]">
+            Profile settings will appear here in a future update.
+          </div>
+        </div>
+
+        <div className="mt-6 flex justify-end">
+          <ConsoleButton label="Close" variant="outline" onClick={onClose} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default function ConsoleShell({ userName, userEmail }: ConsoleShellProps) {
   const searchParams = useSearchParams();
   const router = useRouter();
   const projectId = searchParams.get("projectId");
@@ -3185,9 +3385,20 @@ export default function ConsoleShell({ userName }: ConsoleShellProps) {
     isOverviewMode ? "overview" : "home",
   );
   const [projectData, setProjectData] = useState<Project | null>(null);
+  const [overviewMetrics, setOverviewMetrics] = useState<OverviewMetrics | null>(
+    null,
+  );
+  const [overviewNewAssets, setOverviewNewAssets] =
+    useState<NewAssetsSeries | null>(null);
+  const [isOverviewLoading, setIsOverviewLoading] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [editPortalHeaderActions, setEditPortalHeaderActions] =
     useState<EditPortalHeaderActions | null>(null);
+  const [isAccountMenuOpen, setIsAccountMenuOpen] = useState(false);
+  const [showAccountSettings, setShowAccountSettings] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const accountMenuRef = useRef<HTMLDivElement>(null);
 
   const resolvedSection = isOverviewMode
     ? overviewItems.some((item) => item.id === activeSection)
@@ -3225,6 +3436,16 @@ export default function ConsoleShell({ userName }: ConsoleShellProps) {
       ];
   // Key to force remount when project changes (for animations)
   const contentKey = projectId || "overview";
+  const sidebarLabelClass = `min-w-0 overflow-hidden whitespace-nowrap transition-[opacity,transform,max-width] duration-200 ${
+    isSidebarCollapsed
+      ? "max-w-0 opacity-0 translate-x-2"
+      : "max-w-full opacity-100 translate-x-0"
+  }`;
+  const sidebarTitleClass = `overflow-hidden whitespace-nowrap transition-[opacity,transform,max-height] duration-200 ${
+    isSidebarCollapsed
+      ? "max-h-0 opacity-0 -translate-x-2"
+      : "max-h-6 opacity-100 translate-x-0"
+  }`;
 
   // Fetch project data separately
   useEffect(() => {
@@ -3250,6 +3471,60 @@ export default function ConsoleShell({ userName }: ConsoleShellProps) {
 
     fetchProject();
   }, [projectId]);
+
+  useEffect(() => {
+    if (!isOverviewMode) return;
+    let isMounted = true;
+
+    const fetchOverview = async () => {
+      setIsOverviewLoading(true);
+      try {
+        const response = await fetch("/api/dashboard/overview");
+        if (!response.ok) {
+          throw new Error("Failed to fetch overview metrics");
+        }
+        const data = await response.json();
+        if (isMounted) {
+          setOverviewMetrics(data.metrics);
+          setOverviewNewAssets(data.newAssets ?? null);
+        }
+      } catch (error) {
+        console.error("Error fetching overview metrics:", error);
+      } finally {
+        if (isMounted) {
+          setIsOverviewLoading(false);
+        }
+      }
+    };
+
+    fetchOverview();
+    return () => {
+      isMounted = false;
+    };
+  }, [isOverviewMode]);
+
+  useEffect(() => {
+    if (!isAccountMenuOpen) return;
+
+    const handleClick = (event: MouseEvent) => {
+      if (!accountMenuRef.current) return;
+      if (!accountMenuRef.current.contains(event.target as Node)) {
+        setIsAccountMenuOpen(false);
+      }
+    };
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setIsAccountMenuOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClick);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", handleClick);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isAccountMenuOpen]);
 
   // Compute projectInfo from projectData or use default
   const projectInfo = projectId && projectData
@@ -3302,6 +3577,29 @@ export default function ConsoleShell({ userName }: ConsoleShellProps) {
       console.error("Error deleting project:", error);
       alert("An error occurred while deleting the project.");
       setShowDeleteDialog(false);
+    }
+  };
+
+  const handleAccountSettings = () => {
+    setIsAccountMenuOpen(false);
+    setShowAccountSettings(true);
+  };
+
+  const handleLogout = async () => {
+    setIsLoggingOut(true);
+    setIsAccountMenuOpen(false);
+    try {
+      const response = await fetch("/api/auth/logout", { method: "POST" });
+      if (!response.ok) {
+        throw new Error("Logout failed");
+      }
+      router.push("/");
+      router.refresh();
+    } catch (error) {
+      console.error("Logout error", error);
+      alert("Logout failed. Please try again.");
+    } finally {
+      setIsLoggingOut(false);
     }
   };
 
@@ -3368,7 +3666,13 @@ export default function ConsoleShell({ userName }: ConsoleShellProps) {
   const renderSection = () => {
     switch (resolvedSection) {
       case "overview":
-        return <OverviewSection />;
+        return (
+          <OverviewSection
+            metrics={overviewMetrics}
+            isLoading={isOverviewLoading}
+            newAssets={overviewNewAssets}
+          />
+        );
       case "home":
         return (
           <ProjectHomeSection
@@ -3420,7 +3724,6 @@ export default function ConsoleShell({ userName }: ConsoleShellProps) {
       <div className="console-topbar">
         <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-2 px-4 py-2 text-[11px] uppercase tracking-wide text-[color:var(--console-muted)]">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="console-pill">You&apos;re in demo mode</span>
             <span className="inline-flex items-center gap-1">
               <CheckCircle className="h-3 w-3" />
               Complete your KYC information
@@ -3432,17 +3735,37 @@ export default function ConsoleShell({ userName }: ConsoleShellProps) {
               Review KYC
             </button>
           </div>
-          <button
-            type="button"
-            className="font-semibold text-[color:var(--console-accent)]"
-          >
-            Go to live mode
-          </button>
         </div>
       </div>
 
-      <div className="flex flex-1">
-        <aside className="console-sidebar hidden lg:flex w-72 flex-col gap-6 px-6 py-6">
+      <div className="console-body flex flex-1">
+        <aside
+          id="console-sidebar"
+          className={`console-sidebar hidden lg:flex ${
+            isSidebarCollapsed ? "w-20 px-3" : "w-72 px-6"
+          } flex-col gap-6 overflow-hidden py-6 transition-[width] duration-200`}
+        >
+          <button
+            type="button"
+            onClick={() => setIsSidebarCollapsed((prev) => !prev)}
+            aria-controls="console-sidebar"
+            aria-expanded={!isSidebarCollapsed}
+            aria-label={isSidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+            title={isSidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+            className={`inline-flex items-center ${
+              isSidebarCollapsed ? "justify-center" : "gap-2"
+            } rounded-full border border-[color:var(--console-border)] bg-white/80 px-3 py-1.5 text-[11px] font-semibold text-[color:var(--console-muted)] transition hover:bg-white/95 hover:text-[color:var(--console-accent)]`}
+          >
+            {isSidebarCollapsed ? (
+              <ChevronRight className="h-3.5 w-3.5" />
+            ) : (
+              <ChevronLeft className="h-3.5 w-3.5" />
+            )}
+            <span className={sidebarLabelClass}>
+              {isSidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+            </span>
+          </button>
+
           <nav className="flex flex-col gap-4">
             {isOverviewMode ? (
               <div className="flex flex-col gap-1">
@@ -3459,7 +3782,10 @@ export default function ConsoleShell({ userName }: ConsoleShellProps) {
                       }
                       disabled={isDisabled}
                       aria-disabled={isDisabled}
-                      className={`flex items-center gap-3 rounded-2xl px-3 py-2 text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-60 ${
+                      title={isSidebarCollapsed ? item.label : undefined}
+                      className={`flex items-center rounded-2xl py-2 text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-60 ${
+                        isSidebarCollapsed ? "justify-center px-2" : "gap-3 px-3"
+                      } ${
                         isDisabled
                           ? "text-slate-300"
                           : active
@@ -3468,7 +3794,7 @@ export default function ConsoleShell({ userName }: ConsoleShellProps) {
                       }`}
                     >
                       <Icon className="h-4 w-4" />
-                      {item.label}
+                      <span className={sidebarLabelClass}>{item.label}</span>
                     </button>
                   );
                 })}
@@ -3476,7 +3802,7 @@ export default function ConsoleShell({ userName }: ConsoleShellProps) {
             ) : (
               fullSecondaryGroups.map((group) => (
                 <div key={group.title}>
-                  <p className="text-xs uppercase text-[color:var(--console-muted)]">
+                  <p className={`text-xs uppercase text-[color:var(--console-muted)] ${sidebarTitleClass}`}>
                     {group.title}
                   </p>
                   <div className="mt-2 flex flex-col gap-1">
@@ -3488,14 +3814,17 @@ export default function ConsoleShell({ userName }: ConsoleShellProps) {
                           key={item.id}
                           type="button"
                           onClick={() => setActiveSection(item.id)}
-                          className={`flex items-center gap-3 rounded-2xl px-3 py-2 text-sm font-medium transition ${
+                          title={isSidebarCollapsed ? item.label : undefined}
+                          className={`flex items-center rounded-2xl py-2 text-sm font-medium transition ${
+                            isSidebarCollapsed ? "justify-center px-2" : "gap-3 px-3"
+                          } ${
                             active
                               ? "bg-white/80 text-[color:var(--console-accent)] shadow-md"
                               : "text-[color:var(--console-muted)] hover:bg-white/60"
                           }`}
                         >
                           <Icon className="h-4 w-4" />
-                          {item.label}
+                          <span className={sidebarLabelClass}>{item.label}</span>
                         </button>
                       );
                     })}
@@ -3505,7 +3834,7 @@ export default function ConsoleShell({ userName }: ConsoleShellProps) {
             )}
           </nav>
 
-          {!isOverviewMode && (
+          {!isOverviewMode && !isSidebarCollapsed && (
             <div className="mt-auto space-y-2 text-xs text-[color:var(--console-muted)]">
               <div className="rounded-2xl border border-white/60 bg-white/70 p-3">
                 <div className="flex items-center justify-between">
@@ -3549,7 +3878,52 @@ export default function ConsoleShell({ userName }: ConsoleShellProps) {
             <div className="flex flex-wrap items-center gap-2">
               {renderHeaderActions()}
               <ConsoleIconButton icon={Bell} label="Notifications" />
-              <ConsoleIconButton icon={User} label="Account" />
+              <div ref={accountMenuRef} className="relative">
+                <ConsoleIconButton
+                  icon={User}
+                  label="Account"
+                  aria-haspopup="menu"
+                  aria-expanded={isAccountMenuOpen}
+                  aria-controls="account-menu"
+                  onClick={() => setIsAccountMenuOpen((prev) => !prev)}
+                />
+                {isAccountMenuOpen ? (
+                  <div
+                    id="account-menu"
+                    role="menu"
+                    className="absolute right-0 top-full z-50 mt-2 w-52 rounded-2xl border border-white/70 bg-white/90 p-2 shadow-[0_18px_40px_rgba(186,120,80,0.16)] backdrop-blur-xl"
+                  >
+                    <div className="px-3 py-2">
+                      <p className="text-[11px] uppercase text-[color:var(--console-muted)]">
+                        Signed in as
+                      </p>
+                      <p className="text-sm font-semibold text-[color:var(--console-text)]">
+                        {userName ?? "Account"}
+                      </p>
+                    </div>
+                    <div className="my-1 h-px bg-white/70" />
+                    <button
+                      type="button"
+                      role="menuitem"
+                      onClick={handleAccountSettings}
+                      className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-sm text-[color:var(--console-text)] transition hover:bg-white/80"
+                    >
+                      <Settings className="h-4 w-4" />
+                      Settings
+                    </button>
+                    <button
+                      type="button"
+                      role="menuitem"
+                      onClick={handleLogout}
+                      disabled={isLoggingOut}
+                      className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-sm text-red-600 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-70"
+                    >
+                      <LogOut className="h-4 w-4" />
+                      {isLoggingOut ? "Logging out..." : "Log out"}
+                    </button>
+                  </div>
+                ) : null}
+              </div>
             </div>
           </header>
 
@@ -3587,6 +3961,13 @@ export default function ConsoleShell({ userName }: ConsoleShellProps) {
           onClose={() => setShowDeleteDialog(false)}
           onConfirm={handleDeleteProject}
           projectName={projectData?.name}
+        />
+      )}
+      {showAccountSettings && (
+        <AccountSettingsDialog
+          onClose={() => setShowAccountSettings(false)}
+          userName={userName}
+          userEmail={userEmail}
         />
       )}
     </div>

@@ -48,6 +48,10 @@ export async function DELETE(_req: NextRequest, { params }: Params) {
     await prisma.$transaction([
       prisma.projectFile.deleteMany({ where: { projectId: id } }),
       prisma.projectToken.deleteMany({ where: { projectId: id } }),
+      prisma.offeringSubscription.deleteMany({
+        where: { offering: { projectId: id } },
+      }),
+      prisma.offering.deleteMany({ where: { projectId: id } }),
       prisma.projectMilestone.deleteMany({ where: { projectId: id } }),
       prisma.invitationRecord.deleteMany({ where: { projectId: id } }),
       prisma.userProject.deleteMany({ where: { projectId: id } }),

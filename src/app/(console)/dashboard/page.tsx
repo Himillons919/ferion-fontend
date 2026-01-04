@@ -3,5 +3,5 @@ import { getCurrentUser } from "@/lib/auth";
 
 export default async function DashboardPage() {
   const user = await getCurrentUser();
-  return <ConsoleShell userName={user.name} />;
+  return <ConsoleShell userName={user.name} userEmail={user.email} />;
 }

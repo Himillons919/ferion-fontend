@@ -189,6 +189,20 @@ export default function Home() {
                 />
               </div>
 
+              {isLogin ? (
+                <div className="flex justify-end">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      alert("Please contact admin to reset your password.")
+                    }
+                    className="text-xs font-semibold text-orange-600 transition hover:text-orange-700"
+                  >
+                    Forgot password?
+                  </button>
+                </div>
+              ) : null}
+
               {error && (
                 <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
                   {error}
